@@ -24,12 +24,14 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         const xtermPath = path.join(__dirname, '..', 'node_modules', '@xterm', 'xterm', 'lib', 'xterm.js');
         const xtermCssPath = path.join(__dirname, '..', 'node_modules', '@xterm', 'xterm', 'css', 'xterm.css');
         const fitAddonPath = path.join(__dirname, '..', 'node_modules', '@xterm', 'addon-fit', 'lib', 'addon-fit.js');
+        const canvasAddonPath = path.join(__dirname, '..', 'node_modules', '@xterm', 'addon-canvas', 'lib', 'addon-canvas.js');
 
         const xtermUri = webviewView.webview.asWebviewUri(vscode.Uri.file(xtermPath));
         const xtermCssUri = webviewView.webview.asWebviewUri(vscode.Uri.file(xtermCssPath));
         const fitAddonUri = webviewView.webview.asWebviewUri(vscode.Uri.file(fitAddonPath));
+        const canvasAddonUri = webviewView.webview.asWebviewUri(vscode.Uri.file(canvasAddonPath));
 
-        webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri);
+        webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri, canvasAddonUri);
 
         // Use user's default shell with login shell flag
         const shell = process.platform === 'win32' ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
@@ -76,7 +78,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri) {
+    private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri, canvasAddonUri: vscode.Uri) {
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,6 +108,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
     
     <script src="${xtermUri}"></script>
     <script src="${fitAddonUri}"></script>
+    <script src="${canvasAddonUri}"></script>
     <script>
         const vscode = acquireVsCodeApi();
         
@@ -122,6 +125,8 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         });
         
         const fitAddon = new FitAddon.FitAddon();
+        const canvasAddon = new CanvasAddon.CanvasAddon();
+        terminal.loadAddon(canvasAddon);
         terminal.loadAddon(fitAddon);
         
         terminal.open(document.getElementById('terminal'));
