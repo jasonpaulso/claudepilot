@@ -97,7 +97,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    public openTerminal() {
+    public async openTerminal() {
         if (this._view) {
             // Focus the view to make it visible
             this._view.show?.(true);
@@ -106,6 +106,9 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             if (!this._ptyProcess) {
                 this._view.webview.postMessage({ command: 'refresh' });
             }
+        } else {
+            // If view isn't initialized yet, open it first
+            await vscode.commands.executeCommand('workbench.view.extension.claudePilot');
         }
     }
 

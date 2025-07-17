@@ -14,22 +14,21 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "views": {
-      "claudePilot": [
-        {
-          "id": "claudePilot",
-          "name": "Claude Code",
-          "type": "webview",
-          "when": "true"
-        }
-      ]
-    },
     "viewsContainers": {
       "activitybar": [
         {
           "id": "claudePilot",
-          "title": "Claude Code",
-          "icon": "$(terminal)"
+          "title": "Claude Pilot",
+          "icon": "$(robot)"
+        }
+      ]
+    },
+    "views": {
+      "claudePilot": [
+        {
+          "id": "claudePilot",
+          "name": "Claude Pilot",
+          "type": "webview"
         }
       ]
     },
@@ -41,8 +40,13 @@
       },
       {
         "command": "claudePilot.openTerminal",
-        "title": "Open Claude Terminal",
-        "icon": "$(terminal)"
+        "title": "Open Claude Pilot",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "claudePilot.focus",
+        "title": "Show Claude Pilot",
+        "icon": "$(robot)"
       }
     ],
     "menus": {
@@ -56,6 +60,10 @@
       "commandPalette": [
         {
           "command": "claudePilot.openTerminal",
+          "when": "true"
+        },
+        {
+          "command": "claudePilot.focus",
           "when": "true"
         }
       ],
