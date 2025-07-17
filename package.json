@@ -38,6 +38,11 @@
         "command": "claudePilot.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "claudePilot.openTerminal",
+        "title": "Open Claude Terminal",
+        "icon": "$(terminal)"
       }
     ],
     "menus": {
@@ -45,6 +50,25 @@
         {
           "command": "claudePilot.refresh",
           "when": "view == claudePilot",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "claudePilot.openTerminal",
+          "when": "true"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "claudePilot.openTerminal",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "claudePilot.openTerminal",
+          "when": "true",
           "group": "navigation"
         }
       ]

@@ -6,6 +6,9 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'claudePilot';
     private _view?: vscode.WebviewView;
     private _ptyProcess?: pty.IPty;
+    private _shellReady = false;
+    private _lastDataTime = 0;
+    private _readyTimer?: NodeJS.Timeout;
 
     constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -37,6 +40,14 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         const shell = process.platform === 'win32' ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
         const shellArgs = process.platform === 'win32' ? [] : ['-l'];
         
+        // Reset shell ready state for new terminal
+        this._shellReady = false;
+        this._lastDataTime = 0;
+        if (this._readyTimer) {
+            clearTimeout(this._readyTimer);
+            this._readyTimer = undefined;
+        }
+        
         this._ptyProcess = pty.spawn(shell, shellArgs, {
             name: 'xterm-256color',
             cols: 80,
@@ -54,6 +65,14 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
 
         this._ptyProcess.onData((data) => {
             webviewView.webview.postMessage({ command: 'data', data });
+            
+            // Track when data was last received
+            this._lastDataTime = Date.now();
+            
+            // If shell isn't ready yet, start/restart the ready timer
+            if (!this._shellReady) {
+                this._scheduleReadyCheck();
+            }
         });
 
         webviewView.webview.onDidReceiveMessage(
@@ -76,6 +95,36 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         if (this._view) {
             this._view.webview.postMessage({ command: 'refresh' });
         }
+    }
+
+    public openTerminal() {
+        if (this._view) {
+            // Focus the view to make it visible
+            this._view.show?.(true);
+            
+            // If there's no active PTY process, the view will recreate it
+            if (!this._ptyProcess) {
+                this._view.webview.postMessage({ command: 'refresh' });
+            }
+        }
+    }
+
+    private _scheduleReadyCheck() {
+        // Clear any existing timer
+        if (this._readyTimer) {
+            clearTimeout(this._readyTimer);
+        }
+        
+        // Set a timer to check if shell is ready after data stops flowing
+        this._readyTimer = setTimeout(() => {
+            // Check if enough time has passed since last data
+            const timeSinceLastData = Date.now() - this._lastDataTime;
+            if (timeSinceLastData >= 1000 && !this._shellReady) {
+                this._shellReady = true;
+                // Send claude command after shell has settled
+                this._ptyProcess?.write('claude\r');
+            }
+        }, 1500); // Wait 1.5 seconds for shell to settle
     }
 
     private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri, canvasAddonUri: vscode.Uri) {
