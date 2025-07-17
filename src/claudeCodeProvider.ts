@@ -31,15 +31,22 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri);
 
-        // Create PTY process
-        this._ptyProcess = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
-            name: 'xterm-color',
+        // Use user's default shell with login shell flag
+        const shell = process.platform === 'win32' ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
+        const shellArgs = process.platform === 'win32' ? [] : ['-l'];
+        
+        this._ptyProcess = pty.spawn(shell, shellArgs, {
+            name: 'xterm-256color',
             cols: 80,
             rows: 30,
             cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd(),
             env: {
                 ...process.env,
-                TERM: 'xterm-256color'
+                TERM: 'xterm-256color',
+                COLORTERM: 'truecolor',
+                TERM_PROGRAM: 'vscode',
+                TERM_PROGRAM_VERSION: vscode.version,
+                VSCODE_PID: process.pid.toString()
             } as { [key: string]: string }
         });
 
