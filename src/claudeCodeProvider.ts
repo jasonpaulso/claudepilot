@@ -87,12 +87,12 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
     <style>
         body {
             margin: 0;
-            padding: 0;
-            background-color: #000;
+            padding: 12px;
+            background-color: transparent;
             overflow: hidden;
         }
         #terminal {
-            height: 100vh;
+            height: calc(100vh - 24px);
             width: 100%;
         }
         .xterm {
