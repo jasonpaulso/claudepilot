@@ -31,11 +31,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         const fitAddonUri = webviewView.webview.asWebviewUri(vscode.Uri.file(fitAddonPath));
         const canvasAddonUri = webviewView.webview.asWebviewUri(vscode.Uri.file(canvasAddonPath));
 
-        // Get VS Code theme colors
-        const colorTheme = vscode.window.activeColorTheme;
-        const isLight = colorTheme.kind === vscode.ColorThemeKind.Light;
-        
-        webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri, canvasAddonUri, isLight);
+        webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri, canvasAddonUri);
 
         // Use user's default shell with login shell flag
         const shell = process.platform === 'win32' ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
@@ -45,7 +41,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             name: 'xterm-256color',
             cols: 80,
             rows: 30,
-            cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd(),
+            cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.env.HOME || process.env.USERPROFILE || process.cwd(),
             env: {
                 ...process.env,
                 TERM: 'xterm-256color',
@@ -82,7 +78,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri, canvasAddonUri: vscode.Uri, isLight: boolean) {
+    private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri, canvasAddonUri: vscode.Uri) {
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -126,41 +122,44 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         
         // Get computed styles from body element
         const bodyStyles = window.getComputedStyle(document.body);
-        const backgroundColor = bodyStyles.backgroundColor || '#1e1e1e';
         
-        // Use appropriate terminal colors based on VS Code theme
-        const terminalBackgroundColor = ${isLight ? "'#f3f3f3'" : "'#252526'"};
-        const terminalForegroundColor = ${isLight ? "'#000000'" : "'#cccccc'"};
-        const color = terminalForegroundColor;
+        // Helper function to get VS Code theme color from CSS variables
+        function getThemeColor(variable, fallback) {
+            const color = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+            return color || fallback;
+        }
+        
+        // Build terminal theme from VS Code CSS variables
+        const terminalTheme = {
+            background: undefined, // Always transparent for sidebar integration
+            foreground: getThemeColor('--vscode-terminal-foreground', '#cccccc'),
+            cursor: getThemeColor('--vscode-terminal-selectionForeground', '#ffffff'),
+            cursorAccent: getThemeColor('--vscode-terminal-background', '#1e1e1e'),
+            selection: getThemeColor('--vscode-terminal-selectionBackground', '#264f78'),
+            black: getThemeColor('--vscode-terminal-ansiBlack', '#000000'),
+            red: getThemeColor('--vscode-terminal-ansiRed', '#cd3131'),
+            green: getThemeColor('--vscode-terminal-ansiGreen', '#0dbc79'),
+            yellow: getThemeColor('--vscode-terminal-ansiYellow', '#e5e510'),
+            blue: getThemeColor('--vscode-terminal-ansiBlue', '#2472c8'),
+            magenta: getThemeColor('--vscode-terminal-ansiMagenta', '#bc3fbc'),
+            cyan: getThemeColor('--vscode-terminal-ansiCyan', '#11a8cd'),
+            white: getThemeColor('--vscode-terminal-ansiWhite', '#e5e5e5'),
+            brightBlack: getThemeColor('--vscode-terminal-ansiBrightBlack', '#666666'),
+            brightRed: getThemeColor('--vscode-terminal-ansiBrightRed', '#f14c4c'),
+            brightGreen: getThemeColor('--vscode-terminal-ansiBrightGreen', '#23d18b'),
+            brightYellow: getThemeColor('--vscode-terminal-ansiBrightYellow', '#f5f543'),
+            brightBlue: getThemeColor('--vscode-terminal-ansiBrightBlue', '#3b8eea'),
+            brightMagenta: getThemeColor('--vscode-terminal-ansiBrightMagenta', '#d670d6'),
+            brightCyan: getThemeColor('--vscode-terminal-ansiBrightCyan', '#29b8db'),
+            brightWhite: getThemeColor('--vscode-terminal-ansiBrightWhite', '#e5e5e5')
+        };
         
         const terminal = new Terminal({
             cursorBlink: true,
-            fontSize: 14,
-            fontFamily: bodyStyles.fontFamily || 'Consolas, Monaco, Menlo, monospace',
+            fontSize: parseInt(getThemeColor('--vscode-editor-font-size', '14').replace('px', '')) || 14,
+            fontFamily: getThemeColor('--vscode-editor-font-family', 'Consolas, Monaco, Menlo, monospace'),
             allowTransparency: true,
-            theme: {
-                background: undefined,
-                foreground: color,
-                cursor: ${isLight ? "'#000000'" : "'#ffffff'"},
-                cursorAccent: terminalBackgroundColor,
-                selection: ${isLight ? "'#add6ff'" : "'#264f78'"},
-                black: ${isLight ? "'#000000'" : "'#000000'"},
-                red: ${isLight ? "'#cd3131'" : "'#cd3131'"},
-                green: ${isLight ? "'#00bc00'" : "'#0dbc79'"},
-                yellow: ${isLight ? "'#949800'" : "'#e5e510'"},
-                blue: ${isLight ? "'#0451a5'" : "'#2472c8'"},
-                magenta: ${isLight ? "'#bc05bc'" : "'#bc3fbc'"},
-                cyan: ${isLight ? "'#0598bc'" : "'#11a8cd'"},
-                white: ${isLight ? "'#555555'" : "'#e5e5e5'"},
-                brightBlack: ${isLight ? "'#666666'" : "'#666666'"},
-                brightRed: ${isLight ? "'#cd3131'" : "'#f14c4c'"},
-                brightGreen: ${isLight ? "'#14ce14'" : "'#23d18b'"},
-                brightYellow: ${isLight ? "'#b5ba00'" : "'#f5f543'"},
-                brightBlue: ${isLight ? "'#0451a5'" : "'#3b8eea'"},
-                brightMagenta: ${isLight ? "'#bc05bc'" : "'#d670d6'"},
-                brightCyan: ${isLight ? "'#0598bc'" : "'#29b8db'"},
-                brightWhite: ${isLight ? "'#a5a5a5'" : "'#e5e5e5'"}
-            }
+            theme: terminalTheme
         });
         
         const fitAddon = new FitAddon.FitAddon();
