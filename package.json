@@ -1,0 +1,68 @@
+{
+  "name": "claude-pilot",
+  "displayName": "Claude Pilot",
+  "description": "Moveable Claude Code view for VS Code",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:claudePilot"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "claudePilot": [
+        {
+          "id": "claudePilot",
+          "name": "Claude Code",
+          "type": "webview",
+          "when": "true"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claudePilot",
+          "title": "Claude Code",
+          "icon": "$(terminal)"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "claudePilot.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "claudePilot.refresh",
+          "when": "view == claudePilot",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@xterm/xterm": "^5.3.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@lydell/node-pty": "^1.1.0"
+  }
+}
