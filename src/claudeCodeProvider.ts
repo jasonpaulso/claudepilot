@@ -3,14 +3,22 @@ import * as pty from '@lydell/node-pty';
 import * as path from 'path';
 
 export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
-    public static readonly viewType = 'claudePilot';
+    public static readonly viewType = 'claudePilotView';
+    private static _instance?: ClaudeCodeProvider;
     private _view?: vscode.WebviewView;
     private _ptyProcess?: pty.IPty;
     private _shellReady = false;
     private _lastDataTime = 0;
     private _readyTimer?: NodeJS.Timeout;
+    private _terminalInitialized = false;
 
-    constructor(private readonly _extensionUri: vscode.Uri) {}
+    constructor(private readonly _extensionUri: vscode.Uri) {
+        ClaudeCodeProvider._instance = this;
+    }
+
+    public static getInstance(): ClaudeCodeProvider | undefined {
+        return ClaudeCodeProvider._instance;
+    }
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -34,21 +42,25 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         const fitAddonUri = webviewView.webview.asWebviewUri(vscode.Uri.file(fitAddonPath));
         const canvasAddonUri = webviewView.webview.asWebviewUri(vscode.Uri.file(canvasAddonPath));
 
-        webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri, canvasAddonUri);
+        // Always include a unique timestamp to force webview refresh (from PostgreSQL extension pattern)
+        const timeNow = new Date().getTime();
+        webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri, canvasAddonUri, timeNow);
 
         // Use user's default shell with login shell flag
         const shell = process.platform === 'win32' ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
         const shellArgs = process.platform === 'win32' ? [] : ['-l'];
         
-        // Reset shell ready state for new terminal
-        this._shellReady = false;
-        this._lastDataTime = 0;
-        if (this._readyTimer) {
-            clearTimeout(this._readyTimer);
-            this._readyTimer = undefined;
-        }
-        
-        this._ptyProcess = pty.spawn(shell, shellArgs, {
+        // Only create new PTY process if one doesn't exist
+        if (!this._ptyProcess) {
+            // Reset shell ready state for new terminal
+            this._shellReady = false;
+            this._lastDataTime = 0;
+            if (this._readyTimer) {
+                clearTimeout(this._readyTimer);
+                this._readyTimer = undefined;
+            }
+            
+            this._ptyProcess = pty.spawn(shell, shellArgs, {
             name: 'xterm-256color',
             cols: 80,
             rows: 30,
@@ -63,17 +75,22 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             } as { [key: string]: string }
         });
 
-        this._ptyProcess.onData((data) => {
-            webviewView.webview.postMessage({ command: 'data', data });
+            this._ptyProcess.onData((data) => {
+                if (this._view) {
+                    this._view.webview.postMessage({ command: 'data', data });
+                }
+                
+                // Track when data was last received
+                this._lastDataTime = Date.now();
+                
+                // If shell isn't ready yet, start/restart the ready timer
+                if (!this._shellReady) {
+                    this._scheduleReadyCheck();
+                }
+            });
             
-            // Track when data was last received
-            this._lastDataTime = Date.now();
-            
-            // If shell isn't ready yet, start/restart the ready timer
-            if (!this._shellReady) {
-                this._scheduleReadyCheck();
-            }
-        });
+            this._terminalInitialized = true;
+        }
 
         webviewView.webview.onDidReceiveMessage(
             message => {
@@ -99,16 +116,9 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
 
     public async openTerminal() {
         if (this._view) {
-            // Focus the view to make it visible
             this._view.show?.(true);
-            
-            // If there's no active PTY process, the view will recreate it
-            if (!this._ptyProcess) {
-                this._view.webview.postMessage({ command: 'refresh' });
-            }
         } else {
-            // If view isn't initialized yet, open it first
-            await vscode.commands.executeCommand('workbench.view.extension.claudePilot');
+            await vscode.commands.executeCommand('workbench.view.extension.claudePilotContainer');
         }
     }
 
@@ -130,13 +140,14 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         }, 1500); // Wait 1.5 seconds for shell to settle
     }
 
-    private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri, canvasAddonUri: vscode.Uri) {
+    private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri, canvasAddonUri: vscode.Uri, timeNow: number) {
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude Code Terminal</title>
+    <!-- Timestamp ${timeNow} to force webview refresh -->
     <link rel="stylesheet" href="${xtermCssUri}" />
     <style>
         body {
@@ -150,6 +161,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         #terminal {
             height: calc(100vh - 24px);
             width: 100%;
+            box-sizing: border-box;
         }
         .xterm {
             font-family: inherit;
@@ -170,7 +182,13 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
     <script src="${fitAddonUri}"></script>
     <script src="${canvasAddonUri}"></script>
     <script>
+        console.log('Claude Pilot webview loaded at time ${timeNow}ms');
+        
         const vscode = acquireVsCodeApi();
+        
+        // Try to restore previous state
+        const previousState = vscode.getState();
+        let terminalHasContent = previousState ? previousState.hasContent : false;
         
         // Get computed styles from body element
         const bodyStyles = window.getComputedStyle(document.body);
@@ -224,6 +242,10 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         
         terminal.onData((data) => {
             vscode.postMessage({ command: 'data', data });
+            
+            // Mark that terminal has content
+            terminalHasContent = true;
+            vscode.setState({ hasContent: true });
         });
         
         terminal.onResize((size) => {
@@ -235,6 +257,16 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             switch (message.command) {
                 case 'data':
                     terminal.write(message.data);
+                    // Mark that terminal has content
+                    terminalHasContent = true;
+                    vscode.setState({ hasContent: true });
+                    break;
+                case 'reconnect':
+                    // Simple reconnect with fit
+                    fitAddon.fit();
+                    break;
+                case 'redraw':
+                    fitAddon.fit();
                     break;
                 case 'refresh':
                     location.reload();
@@ -248,6 +280,58 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         
         // Initial fit
         setTimeout(() => fitAddon.fit(), 100);
+        
+        // Simple resize on focus/visibility changes
+        window.addEventListener('focus', () => {
+            setTimeout(() => fitAddon.fit(), 100);
+        });
+        
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                setTimeout(() => fitAddon.fit(), 100);
+            }
+        });
+        
+        // Add drag and drop support
+        const terminalElement = document.getElementById('terminal');
+        
+        terminalElement.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            terminalElement.style.opacity = '0.8';
+        });
+        
+        terminalElement.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            terminalElement.style.opacity = '1';
+        });
+        
+        terminalElement.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            terminalElement.style.opacity = '1';
+            
+            const files = e.dataTransfer.files;
+            const text = e.dataTransfer.getData('text/plain');
+            
+            if (files.length > 0) {
+                // Handle file drops
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (file.type.startsWith('image/')) {
+                        // For images, insert the file name
+                        terminal.write(file.name + ' ');
+                    } else {
+                        // For other files, insert the file name
+                        terminal.write(file.name + ' ');
+                    }
+                }
+            } else if (text) {
+                // Handle text drops
+                terminal.write(text);
+            }
+        });
     </script>
 </body>
 </html>`;

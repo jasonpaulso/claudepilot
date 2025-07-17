@@ -1,51 +1,44 @@
 # Claude Pilot
 
-A VS Code extension that provides a moveable terminal view for Claude Code, allowing you to run Claude Code in a dedicated terminal that can be positioned in any VS Code panel.
+![Claude Pilot Icon](media/icon.png)
+
+A moveable Claude Code terminal view for VS Code that can be dragged and dropped between different panels.
 
 ## Features
 
-- **Moveable Terminal**: Full terminal interface that can be dragged between VS Code panels (Primary Side Bar, Secondary Side Bar, Bottom Panel)
-- **Real Terminal**: Uses xterm.js and node-pty for a complete terminal experience with colors, cursor positioning, and keyboard input
-- **Claude Code Integration**: Pre-configured environment variables for Claude Code IDE integration
-- **Cross-Platform**: Works on macOS, Linux, and Windows
-
-## Installation
-
-1. Clone this repository
-2. Run `npm install` to install dependencies
-3. Press `F5` to launch the Extension Development Host
-4. Look for the Claude Code icon in the Activity Bar (left sidebar)
-5. Click the icon to open the moveable terminal view
+- **Moveable Terminal**: Drag and drop the Claude terminal between the primary sidebar, secondary sidebar, and bottom panel
+- **Persistent Sessions**: Terminal sessions persist between VS Code restarts
+- **Activity Bar Integration**: Quick access via the robot icon in the Activity Bar
+- **Status Bar Button**: Launch Claude from the status bar
+- **Editor Integration**: Access Claude via the editor toolbar
+- **Drag & Drop Support**: Drop files and text directly into the terminal
 
 ## Usage
 
-Once activated, the extension creates a "Claude Code" view that contains a fully functional terminal. You can:
-
-- Drag the view between different VS Code panels
-- Run Claude Code commands directly in the embedded terminal
-- Use all standard terminal features (command history, tab completion, etc.)
-- Keep your regular VS Code terminal separate for other tasks
-
-## Technical Details
-
-- **Terminal Rendering**: xterm.js for browser-based terminal emulation
-- **PTY Support**: @lydell/node-pty for cross-platform pseudo-terminal functionality
-- **View System**: VS Code's webview view provider for moveable panels
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Compile TypeScript
-npm run compile
-
-# Launch Extension Development Host
-# Press F5 in VS Code
-```
+1. Click the robot icon in the Activity Bar to open Claude Pilot
+2. Drag the panel to your preferred location (sidebar, secondary sidebar, or bottom panel)
+3. Use the terminal just like the built-in Claude Code terminal
+4. Sessions persist automatically between VS Code sessions
 
 ## Requirements
 
 - VS Code 1.74.0 or higher
-- Node.js (any recent version - the extension uses precompiled binaries)
+- Claude Code CLI installed and available in PATH
+
+## Installation
+
+Install from the VS Code Marketplace or install the .vsix file directly.
+
+## Contributing
+
+Issues and pull requests welcome on GitHub.
+
+## Release Notes
+
+### 0.1.0
+
+Initial release with core functionality:
+- Moveable terminal view
+- Session persistence
+- Activity Bar integration
+- Drag & drop support

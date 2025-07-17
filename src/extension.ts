@@ -3,6 +3,10 @@ import { ClaudeCodeProvider } from './claudeCodeProvider';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Claude Pilot extension is now active!');
+    
+    // Force the view container to be visible
+    vscode.commands.executeCommand('setContext', 'claudePilotContainer:visible', true);
+    
     const provider = new ClaudeCodeProvider(context.extensionUri);
     
     context.subscriptions.push(
@@ -10,10 +14,11 @@ export function activate(context: vscode.ExtensionContext) {
     );
     
     // Create status bar item
-    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = "$(robot)";
+    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 1000);
+    statusBarItem.text = "$(robot) Claude";
     statusBarItem.tooltip = "Open Claude Pilot";
     statusBarItem.command = 'claudePilot.openTerminal';
+    statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
     statusBarItem.show();
     
     context.subscriptions.push(
@@ -25,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
             await provider.openTerminal();
         }),
         vscode.commands.registerCommand('claudePilot.focus', () => {
-            vscode.commands.executeCommand('workbench.view.extension.claudePilot');
+            vscode.commands.executeCommand('workbench.view.extension.claudePilotContainer');
         })
     );
 }

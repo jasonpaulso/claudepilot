@@ -1,34 +1,47 @@
 {
   "name": "claude-pilot",
   "displayName": "Claude Pilot",
-  "description": "Moveable Claude Code view for VS Code",
-  "version": "0.0.1",
+  "description": "Moveable Claude Code terminal view for VS Code - drag and drop between panels",
+  "version": "0.1.0",
+  "publisher": "twilightcoders",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/twilightcoders/claude-pilot"
+  },
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "claude",
+    "ai",
+    "terminal",
+    "anthropic"
+  ],
   "activationEvents": [
-    "onView:claudePilot"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "claudePilot",
+          "id": "claudePilotContainer",
           "title": "Claude Pilot",
           "icon": "$(robot)"
         }
       ]
     },
     "views": {
-      "claudePilot": [
+      "claudePilotContainer": [
         {
-          "id": "claudePilot",
+          "id": "claudePilotView",
           "name": "Claude Pilot",
-          "type": "webview"
+          "type": "webview",
+          "icon": "$(robot)"
         }
       ]
     },
