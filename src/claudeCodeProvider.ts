@@ -31,7 +31,11 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         const fitAddonUri = webviewView.webview.asWebviewUri(vscode.Uri.file(fitAddonPath));
         const canvasAddonUri = webviewView.webview.asWebviewUri(vscode.Uri.file(canvasAddonPath));
 
-        webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri, canvasAddonUri);
+        // Get VS Code theme colors
+        const colorTheme = vscode.window.activeColorTheme;
+        const isLight = colorTheme.kind === vscode.ColorThemeKind.Light;
+        
+        webviewView.webview.html = this._getHtmlForWebview(xtermUri, xtermCssUri, fitAddonUri, canvasAddonUri, isLight);
 
         // Use user's default shell with login shell flag
         const shell = process.platform === 'win32' ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
@@ -78,7 +82,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri, canvasAddonUri: vscode.Uri) {
+    private _getHtmlForWebview(xtermUri: vscode.Uri, xtermCssUri: vscode.Uri, fitAddonUri: vscode.Uri, canvasAddonUri: vscode.Uri, isLight: boolean) {
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,6 +95,8 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             margin: 0;
             padding: 12px;
             background-color: transparent;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
             overflow: hidden;
         }
         #terminal {
@@ -98,8 +104,14 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             width: 100%;
         }
         .xterm {
-            font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+            font-family: inherit;
             font-size: 14px;
+        }
+        .xterm .xterm-viewport {
+            background-color: transparent !important;
+        }
+        .xterm .xterm-screen {
+            background-color: transparent !important;
         }
     </style>
 </head>
@@ -112,15 +124,42 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
     <script>
         const vscode = acquireVsCodeApi();
         
+        // Get computed styles from body element
+        const bodyStyles = window.getComputedStyle(document.body);
+        const backgroundColor = bodyStyles.backgroundColor || '#1e1e1e';
+        
+        // Use appropriate terminal colors based on VS Code theme
+        const terminalBackgroundColor = ${isLight ? "'#f3f3f3'" : "'#252526'"};
+        const terminalForegroundColor = ${isLight ? "'#000000'" : "'#cccccc'"};
+        const color = terminalForegroundColor;
+        
         const terminal = new Terminal({
             cursorBlink: true,
             fontSize: 14,
-            fontFamily: 'Consolas, Monaco, Menlo, monospace',
+            fontFamily: bodyStyles.fontFamily || 'Consolas, Monaco, Menlo, monospace',
+            allowTransparency: true,
             theme: {
-                background: '#1e1e1e',
-                foreground: '#d4d4d4',
-                cursor: '#ffffff',
-                selection: '#264f78'
+                background: undefined,
+                foreground: color,
+                cursor: ${isLight ? "'#000000'" : "'#ffffff'"},
+                cursorAccent: terminalBackgroundColor,
+                selection: ${isLight ? "'#add6ff'" : "'#264f78'"},
+                black: ${isLight ? "'#000000'" : "'#000000'"},
+                red: ${isLight ? "'#cd3131'" : "'#cd3131'"},
+                green: ${isLight ? "'#00bc00'" : "'#0dbc79'"},
+                yellow: ${isLight ? "'#949800'" : "'#e5e510'"},
+                blue: ${isLight ? "'#0451a5'" : "'#2472c8'"},
+                magenta: ${isLight ? "'#bc05bc'" : "'#bc3fbc'"},
+                cyan: ${isLight ? "'#0598bc'" : "'#11a8cd'"},
+                white: ${isLight ? "'#555555'" : "'#e5e5e5'"},
+                brightBlack: ${isLight ? "'#666666'" : "'#666666'"},
+                brightRed: ${isLight ? "'#cd3131'" : "'#f14c4c'"},
+                brightGreen: ${isLight ? "'#14ce14'" : "'#23d18b'"},
+                brightYellow: ${isLight ? "'#b5ba00'" : "'#f5f543'"},
+                brightBlue: ${isLight ? "'#0451a5'" : "'#3b8eea'"},
+                brightMagenta: ${isLight ? "'#bc05bc'" : "'#d670d6'"},
+                brightCyan: ${isLight ? "'#0598bc'" : "'#29b8db'"},
+                brightWhite: ${isLight ? "'#a5a5a5'" : "'#e5e5e5'"}
             }
         });
         
