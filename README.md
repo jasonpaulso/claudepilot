@@ -1,8 +1,7 @@
+<img src="media/icon.png" alt="Claude Pilot Icon" width="200" height="200" style="float: right; padding-left: 20px;">
+
 # Claude Pilot
-
-![Claude Pilot Icon](media/icon.png)
-
-A moveable Claude Code terminal view for VS Code that can be dragged and dropped between different panels.
+A Claude Code terminal view for VS Code that can be moved to different VS Code regions.
 
 ## Features
 
@@ -23,22 +22,42 @@ A moveable Claude Code terminal view for VS Code that can be dragged and dropped
 ## Requirements
 
 - VS Code 1.74.0 or higher
-- Claude Code CLI installed and available in PATH
+- [Claude Code extension](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code) by Anthropic
+- Claude Code CLI installed and available in your `PATH`
 
 ## Installation
 
-Install from the VS Code Marketplace or install the .vsix file directly.
+Install from the VS Code Marketplace or install the `.vsix` file directly.
 
 ## Contributing
 
 Issues and pull requests welcome on GitHub.
 
+### Known Issues & Future Work
+- **Terminal state persistence**: When the Claude Pilot view is closed and reopened, the terminal appears blank until user interaction (though the underlying PTY session persists). A visual redraw mechanism is needed to restore the display state.
+- **Cursor positioning**: Cursor may appear offset from correct position after resizing terminal. Force resize to redraw fixes it temporarily.
+
 ## Release Notes
 
-### 0.1.0
+### v0.2.0
+
+#### New Features
+- **Drag & Drop Support**: Drop files directly into the terminal - all file types are handled automatically
+- **Clickable Links**: URLs and file paths are now clickable - file paths open directly in VS Code editor
+- **Version Display**: Shows current extension version in terminal corner
+
+#### Performance & Reliability Improvements  
+- **WebGL Rendering**: Hardware-accelerated terminal rendering for better performance
+- **Better Theme Integration**: Improved background color matching with VS Code themes
+
+#### Under the Hood
+- Modular architecture with separate PTY manager and template utilities
+- Comprehensive test suite (16 automated tests)
+- Enhanced event handling for better VS Code compatibility
+
+### v0.1.0
 
 Initial release with core functionality:
 - Moveable terminal view
 - Session persistence
 - Activity Bar integration
-- Drag & drop support
