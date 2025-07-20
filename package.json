@@ -2,7 +2,7 @@
   "name": "claude-pilot",
   "displayName": "Claude Pilot",
   "description": "Moveable Claude Code terminal view for VS Code - drag and drop between panels",
-  "version": "0.2.0-rc.1",
+  "version": "0.2.0",
   "preview": true,
   "publisher": "twilightcoders",
   "icon": "media/icon.png",
