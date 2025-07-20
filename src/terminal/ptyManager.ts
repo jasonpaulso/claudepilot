@@ -161,8 +161,15 @@ export class PtyManager {
             const timeSinceLastData = Date.now() - this._lastDataTime;
             if (timeSinceLastData >= 1000 && !this._shellReady) {
                 this._shellReady = true;
-                // Send claude command after shell has settled
-                this._ptyProcess?.write('claude\r');
+                
+                // Get the configured starting command
+                const config = vscode.workspace.getConfiguration('claudePilot');
+                const startingCommand = config.get<string>('startingCommand', 'claude');
+                
+                // Execute the configured command (if not 'none')
+                if (startingCommand !== 'none') {
+                    this._ptyProcess?.write(`${startingCommand}\r`);
+                }
             }
         }, 1500); // Wait 1.5 seconds for shell to settle
     }

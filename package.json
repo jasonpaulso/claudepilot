@@ -94,6 +94,28 @@
           "group": "navigation"
         }
       ]
+    },
+    "configuration": {
+      "title": "Claude Pilot",
+      "properties": {
+        "claudePilot.startingCommand": {
+          "type": "string",
+          "enum": [
+            "none",
+            "claude",
+            "claude --continue",
+            "claude --resume"
+          ],
+          "default": "claude",
+          "description": "Command to automatically execute when the terminal starts",
+          "enumDescriptions": [
+            "No command - just start the shell",
+            "Start a fresh Claude Code interactive session",
+            "Load the most recent conversation in the current directory",
+            "Resume a specific session by ID (interactive selection)"
+          ]
+        }
+      }
     }
   },
   "extensionDependencies": [
