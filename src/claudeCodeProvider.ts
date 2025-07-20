@@ -44,17 +44,12 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             });
             this._ptyManager.start();
         } else {
-            // Update callback for existing PTY manager to send to new webview
-            this._ptyManager.updateDataCallback((data: string) => {
+            // PTY already exists - just reconnect data callback
+            this._ptyManager = new PtyManager((data: string) => {
                 if (this._view) {
                     this._view.webview.postMessage({ command: 'data', data });
                 }
             });
-            
-            // Trigger shell redraw by sending resize signal
-            setTimeout(() => {
-                this._ptyManager?.triggerRedraw();
-            }, 200); // Small delay to ensure terminal is ready
         }
 
         this._terminalInitialized = true;
