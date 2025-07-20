@@ -27,6 +27,7 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export class TemplateUtils {
     public static getHtmlTemplate(
@@ -34,6 +35,16 @@ export class TemplateUtils {
         webview: vscode.Webview, 
         timestamp: number
     ): string {
+        // Get version from package.json
+        const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
+        let version = '0.1.0';
+        try {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            version = packageJson.version;
+        } catch (error) {
+            console.warn('Could not read version from package.json:', error);
+        }
+
         // Build paths to xterm.js resources
         const xtermPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'xterm', 'lib', 'xterm.js');
         const xtermCssPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'xterm', 'css', 'xterm.css');
@@ -51,7 +62,7 @@ export class TemplateUtils {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Code Terminal</title>
+    <title>Claude Pilot v${version} Terminal</title>
     <!-- Timestamp ${timestamp} to force webview refresh -->
     <link rel="stylesheet" href="${xtermCssUri}" />
     <style>
@@ -78,10 +89,33 @@ export class TemplateUtils {
         .xterm .xterm-screen {
             background-color: transparent !important;
         }
+        #terminal.drag-over::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(128, 128, 128, 0.3);
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .version-overlay {
+            position: fixed;
+            top: 0px;
+            right: 12px;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.15);
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            pointer-events: none;
+            z-index: 100;
+            user-select: none;
+        }
     </style>
 </head>
 <body>
     <div id="terminal"></div>
+    <div class="version-overlay">v${version}</div>
     
     <script src="${xtermUri}"></script>
     <script src="${fitAddonUri}"></script>
