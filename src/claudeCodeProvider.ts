@@ -26,6 +26,8 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.options = {
             enableScripts: true,
+            enableForms: true,
+            enableCommandUris: true,
             localResourceRoots: [this._extensionUri]
         };
 
@@ -52,6 +54,9 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
                     case 'resize':
                         this._ptyManager?.resize(message.cols, message.rows);
                         break;
+                    case 'fileDrop':
+                        this._handleDroppedFile(message.fileName, message.fileType, message.fileSize, message.fileData);
+                        break;
                 }
             },
             undefined,
@@ -65,12 +70,41 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         }
     }
 
+    public forceRedraw() {
+        if (this._view) {
+            this._view.webview.postMessage({ command: 'redraw' });
+        }
+    }
+
+    public triggerResize() {
+        if (this._view) {
+            this._view.webview.postMessage({ command: 'triggerResize' });
+        }
+    }
+
     public async openTerminal() {
         if (this._view) {
             this._view.show?.(true);
         } else {
             await vscode.commands.executeCommand('workbench.view.extension.claudePilotContainer');
         }
+    }
+
+    public sendFilePath(filePath: string) {
+        this._ptyManager?.sendFilePath(filePath);
+    }
+
+    private async _handleDroppedFile(fileName: string, fileType: string, fileSize: number, fileData: string) {
+        if (fileData) {
+            // All files get saved to temp files for Claude to access
+            await this._ptyManager?.sendFileData(fileData, fileName, fileType);
+        } else {
+            this._ptyManager?.write(`Failed to read file: ${fileName}\n`);
+        }
+    }
+
+    public dispose() {
+        this._ptyManager?.dispose();
     }
 
 }

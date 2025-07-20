@@ -103,6 +103,45 @@ export class PtyManager {
         this._ptyProcess?.resize(cols, rows);
     }
 
+    public sendFilePath(filePath: string): void {
+        // Escape single quotes for shell safety
+        const escapedPath = filePath.replace(/'/g, "\\'");
+        this._ptyProcess?.write(`'${escapedPath}' `);
+    }
+
+    public async sendFileData(fileData: string, fileName: string, fileType: string): Promise<void> {
+        try {
+            const os = require('os');
+            const path = require('path');
+            const fs = require('fs').promises;
+            
+            const tempDir = os.tmpdir();
+            const tempFileName = `claude-pilot-${Date.now()}-${fileName}`;
+            const tempFilePath = path.join(tempDir, tempFileName);
+            
+            // Handle different data formats
+            let buffer: Buffer;
+            if (fileData.startsWith('data:')) {
+                // Data URL format (images, binary files)
+                const base64Data = fileData.split(',')[1];
+                buffer = Buffer.from(base64Data, 'base64');
+            } else {
+                // Plain text content
+                buffer = Buffer.from(fileData, 'utf8');
+            }
+            
+            await fs.writeFile(tempFilePath, buffer);
+            await fs.chmod(tempFilePath, 0o644);
+            
+            // Send the temp file path
+            this._ptyProcess?.write(`'${tempFilePath}' `);
+            
+        } catch (error) {
+            console.error('Error writing file to temp:', error);
+            this._ptyProcess?.write(`"${fileName}" `);
+        }
+    }
+
     public dispose(): void {
         if (this._readyTimer) {
             clearTimeout(this._readyTimer);

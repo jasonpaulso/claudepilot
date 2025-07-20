@@ -114,6 +114,118 @@ export class TemplateUtils {
     </style>
 </head>
 <body>
+    <script type="text/javascript">
+    let isDragActive = false;
+    
+    function setupDragCapture() {
+        // Use capture phase to intercept events before VS Code
+        document.addEventListener('dragenter', handleDragEnter, true);
+        document.addEventListener('dragover', handleDragOver, true);
+        document.addEventListener('dragleave', handleDragLeave, true);
+        document.addEventListener('drop', handleDrop, true);
+        document.addEventListener('dragend', handleDragEnd, true);
+        
+        // Reset on mouse interactions
+        document.addEventListener('mouseup', resetAllDragState);
+        document.addEventListener('click', resetAllDragState);
+    }
+    
+    function resetAllDragState() {
+        isDragActive = false;
+        const terminal = document.getElementById('terminal');
+        terminal.classList.remove('drag-over');
+    }
+    
+    function handleDragEnd(ev) {
+        resetAllDragState();
+    }
+    
+    function handleDragEnter(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        ev.stopImmediatePropagation();
+        Object.defineProperty(ev, 'shiftKey', { value: true, writable: false });
+        dragenter(ev);
+    }
+    
+    function handleDragOver(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        ev.stopImmediatePropagation();
+        Object.defineProperty(ev, 'shiftKey', { value: true, writable: false });
+        dragover(ev);
+    }
+    
+    function handleDragLeave(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        ev.stopImmediatePropagation();
+        Object.defineProperty(ev, 'shiftKey', { value: true, writable: false });
+        dragleave(ev);
+    }
+    
+    function handleDrop(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        ev.stopImmediatePropagation();
+        Object.defineProperty(ev, 'shiftKey', { value: true, writable: false });
+        drop(ev);
+    }
+    
+    function dragenter(ev) {
+        isDragActive = true;
+        const terminal = document.getElementById('terminal');
+        terminal.classList.add('drag-over');
+    }
+    
+    function dragover(ev) {
+        // Keep drag active
+    }
+    
+    function dragleave(ev) {
+        // Only remove if leaving the document completely
+        if (ev.clientX === 0 && ev.clientY === 0) {
+            resetAllDragState();
+        }
+    }
+    
+    function drop(ev) {
+        resetAllDragState();
+        
+        const files = ev.dataTransfer.files;
+        const text = ev.dataTransfer.getData('text/plain');
+        
+        if (files.length > 0) {
+            // Handle file drops with FileReader
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const fileData = event.target.result;
+                    vscode.postMessage({
+                        command: 'fileDrop',
+                        fileName: file.name,
+                        fileType: file.type,
+                        fileSize: file.size,
+                        fileData: fileData
+                    });
+                };
+                
+                // Read file based on type
+                if (file.type.startsWith('image/') || file.type.startsWith('application/')) {
+                    reader.readAsDataURL(file);
+                } else {
+                    reader.readAsText(file);
+                }
+            }
+        } else if (text) {
+            // Handle text drops
+            terminal.write(text);
+        }
+    }
+    </script>
+
     <div id="terminal"></div>
     <div class="version-overlay">v${version}</div>
     
@@ -231,46 +343,11 @@ export class TemplateUtils {
             }
         });
         
-        // Add drag and drop support
-        const terminalElement = document.getElementById('terminal');
-        
-        terminalElement.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            terminalElement.style.opacity = '0.8';
-        });
-        
-        terminalElement.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            terminalElement.style.opacity = '1';
-        });
-        
-        terminalElement.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            terminalElement.style.opacity = '1';
-            
-            const files = e.dataTransfer.files;
-            const text = e.dataTransfer.getData('text/plain');
-            
-            if (files.length > 0) {
-                // Handle file drops
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (file.type.startsWith('image/')) {
-                        // For images, insert the file name
-                        terminal.write(file.name + ' ');
-                    } else {
-                        // For other files, insert the file name
-                        terminal.write(file.name + ' ');
-                    }
-                }
-            } else if (text) {
-                // Handle text drops
-                terminal.write(text);
-            }
-        });
+        // Initialize aggressive drag capture after terminal is ready
+        if (typeof setupDragCapture === 'function') {
+            setupDragCapture();
+            console.log('Claude Pilot: Terminal ready, drag capture initialized');
+        }
     </script>
 </body>
 </html>`;
