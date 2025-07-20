@@ -49,12 +49,14 @@ export class TemplateUtils {
         const xtermPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'xterm', 'lib', 'xterm.js');
         const xtermCssPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'xterm', 'css', 'xterm.css');
         const fitAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-fit', 'lib', 'addon-fit.js');
+        const webglAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-webgl', 'lib', 'addon-webgl.js');
         const canvasAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-canvas', 'lib', 'addon-canvas.js');
 
         // Convert to webview URIs for security
         const xtermUri = webview.asWebviewUri(vscode.Uri.file(xtermPath));
         const xtermCssUri = webview.asWebviewUri(vscode.Uri.file(xtermCssPath));
         const fitAddonUri = webview.asWebviewUri(vscode.Uri.file(fitAddonPath));
+        const webglAddonUri = webview.asWebviewUri(vscode.Uri.file(webglAddonPath));
         const canvasAddonUri = webview.asWebviewUri(vscode.Uri.file(canvasAddonPath));
 
         return `<!DOCTYPE html>
@@ -87,6 +89,9 @@ export class TemplateUtils {
             background-color: transparent !important;
         }
         .xterm .xterm-screen {
+            background-color: transparent !important;
+        }
+        .xterm canvas {
             background-color: transparent !important;
         }
         #terminal.drag-over::before {
@@ -231,6 +236,7 @@ export class TemplateUtils {
     
     <script src="${xtermUri}"></script>
     <script src="${fitAddonUri}"></script>
+    <script src="${webglAddonUri}"></script>
     <script src="${canvasAddonUri}"></script>
     <script>
         console.log('Claude Pilot webview loaded at time ${timestamp}ms');
@@ -241,8 +247,9 @@ export class TemplateUtils {
         const previousState = vscode.getState();
         let terminalHasContent = previousState ? previousState.hasContent : false;
         
-        // Get computed styles from body element
+        // Get computed styles from body element  
         const bodyStyles = window.getComputedStyle(document.body);
+        const bodyBgColor = bodyStyles.backgroundColor;
         
         // Helper function to get VS Code theme color from CSS variables
         function getThemeColor(variable, fallback) {
@@ -284,8 +291,18 @@ export class TemplateUtils {
         });
         
         const fitAddon = new FitAddon.FitAddon();
-        const canvasAddon = new CanvasAddon.CanvasAddon();
-        terminal.loadAddon(canvasAddon);
+
+        // Try WebGL first, fallback to Canvas if WebGL fails
+        try {
+            const webglAddon = new WebglAddon.WebglAddon();
+            terminal.loadAddon(webglAddon);
+            console.log('WebGL renderer loaded successfully');
+        } catch (e) {
+            console.log('WebGL failed, falling back to Canvas:', e);
+            const canvasAddon = new CanvasAddon.CanvasAddon();
+            terminal.loadAddon(canvasAddon);
+        }
+
         terminal.loadAddon(fitAddon);
         
         terminal.open(document.getElementById('terminal'));
