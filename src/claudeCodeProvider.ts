@@ -35,14 +35,28 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         const timeNow = new Date().getTime();
         webviewView.webview.html = TemplateUtils.getHtmlTemplate(this._extensionUri, webviewView.webview, timeNow);
 
-        // Initialize PTY manager
-        this._ptyManager = new PtyManager((data: string) => {
-            if (this._view) {
-                this._view.webview.postMessage({ command: 'data', data });
-            }
-        });
+        // Initialize PTY manager or reconnect existing one
+        if (!this._ptyManager) {
+            this._ptyManager = new PtyManager((data: string) => {
+                if (this._view) {
+                    this._view.webview.postMessage({ command: 'data', data });
+                }
+            });
+            this._ptyManager.start();
+        } else {
+            // Update callback for existing PTY manager to send to new webview
+            this._ptyManager.updateDataCallback((data: string) => {
+                if (this._view) {
+                    this._view.webview.postMessage({ command: 'data', data });
+                }
+            });
+            
+            // Trigger shell redraw by sending resize signal
+            setTimeout(() => {
+                this._ptyManager?.triggerRedraw();
+            }, 200); // Small delay to ensure terminal is ready
+        }
 
-        this._ptyManager.start();
         this._terminalInitialized = true;
 
         webviewView.webview.onDidReceiveMessage(
@@ -56,6 +70,9 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'fileDrop':
                         this._handleDroppedFile(message.fileName, message.fileType, message.fileSize, message.fileData);
+                        break;
+                    case 'openFile':
+                        this._handleOpenFile(message.filePath);
                         break;
                 }
             },
@@ -100,6 +117,15 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             await this._ptyManager?.sendFileData(fileData, fileName, fileType);
         } else {
             this._ptyManager?.write(`Failed to read file: ${fileName}\n`);
+        }
+    }
+
+    private async _handleOpenFile(filePath: string) {
+        try {
+            const uri = vscode.Uri.file(filePath);
+            await vscode.window.showTextDocument(uri);
+        } catch (error) {
+            console.error('Failed to open file:', error);
         }
     }
 

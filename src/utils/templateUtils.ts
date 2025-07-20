@@ -51,6 +51,7 @@ export class TemplateUtils {
         const fitAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-fit', 'lib', 'addon-fit.js');
         const webglAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-webgl', 'lib', 'addon-webgl.js');
         const canvasAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-canvas', 'lib', 'addon-canvas.js');
+        const webLinksAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-web-links', 'lib', 'addon-web-links.js');
 
         // Convert to webview URIs for security
         const xtermUri = webview.asWebviewUri(vscode.Uri.file(xtermPath));
@@ -58,6 +59,7 @@ export class TemplateUtils {
         const fitAddonUri = webview.asWebviewUri(vscode.Uri.file(fitAddonPath));
         const webglAddonUri = webview.asWebviewUri(vscode.Uri.file(webglAddonPath));
         const canvasAddonUri = webview.asWebviewUri(vscode.Uri.file(canvasAddonPath));
+        const webLinksAddonUri = webview.asWebviewUri(vscode.Uri.file(webLinksAddonPath));
 
         return `<!DOCTYPE html>
 <html lang="en">
@@ -238,6 +240,7 @@ export class TemplateUtils {
     <script src="${fitAddonUri}"></script>
     <script src="${webglAddonUri}"></script>
     <script src="${canvasAddonUri}"></script>
+    <script src="${webLinksAddonUri}"></script>
     <script>
         console.log('Claude Pilot webview loaded at time ${timestamp}ms');
         
@@ -291,6 +294,15 @@ export class TemplateUtils {
         });
         
         const fitAddon = new FitAddon.FitAddon();
+        const webLinksAddon = new WebLinksAddon.WebLinksAddon((event, uri) => {
+            // Handle file paths by opening in VS Code editor
+            if (uri.startsWith('/') || uri.match(/^[a-zA-Z]:\\\\/)) {
+                vscode.postMessage({ command: 'openFile', filePath: uri });
+                return false; // Prevent default browser behavior
+            }
+            // Allow default behavior for URLs
+            return true;
+        });
 
         // Try WebGL first, fallback to Canvas if WebGL fails
         try {
@@ -304,6 +316,7 @@ export class TemplateUtils {
         }
 
         terminal.loadAddon(fitAddon);
+        terminal.loadAddon(webLinksAddon);
         
         terminal.open(document.getElementById('terminal'));
         fitAddon.fit();
