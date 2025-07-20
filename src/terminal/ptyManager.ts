@@ -34,13 +34,13 @@
  */
 
 import * as vscode from 'vscode';
-import { spawn } from '@lydell/node-pty';
+import * as pty from '@lydell/node-pty';
 
 export class PtyManager {
-    private _ptyProcess: any;
-    private _lastDataTime: number = 0;
-    private _shellReady: boolean = false;
-    private _readyTimer: NodeJS.Timeout | undefined;
+    private _ptyProcess?: pty.IPty;
+    private _shellReady = false;
+    private _lastDataTime = 0;
+    private _readyTimer?: NodeJS.Timeout;
     private _onDataCallback?: (data: string) => void;
 
     constructor(onDataCallback?: (data: string) => void) {
@@ -51,24 +51,48 @@ export class PtyManager {
         // Use user's default shell with login shell flag
         const shell = process.platform === 'win32' ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
         const shellArgs = process.platform === 'win32' ? [] : ['-l'];
+        
+        // Only create new PTY process if one doesn't exist
+        if (!this._ptyProcess) {
+            // Reset shell ready state for new terminal
+            this._shellReady = false;
+            this._lastDataTime = 0;
+            if (this._readyTimer) {
+                clearTimeout(this._readyTimer);
+                this._readyTimer = undefined;
+            }
+            
+            this._ptyProcess = pty.spawn(shell, shellArgs, {
+                name: 'xterm-256color',
+                cols: 80,
+                rows: 30,
+                cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.env.HOME || process.env.USERPROFILE || process.cwd(),
+                env: {
+                    ...process.env,
+                    TERM: 'xterm-256color',
+                    COLORTERM: 'truecolor',
+                    TERM_PROGRAM: 'vscode',
+                    TERM_PROGRAM_VERSION: vscode.version,
+                    VSCODE_PID: process.pid.toString()
+                } as { [key: string]: string }
+            });
 
-        this._ptyProcess = spawn(shell, shellArgs, {
-            name: 'xterm-color',
-            cols: 80,
-            rows: 24,
-            cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.env.HOME,
-            env: process.env
-        });
-
-        this._ptyProcess.onData((data: string) => {
-            this._lastDataTime = Date.now();
-            this._onDataCallback?.(data);
-            this._scheduleReadyCheck();
-        });
-
-        this._ptyProcess.onExit(() => {
-            console.log('PTY process exited');
-        });
+            this._ptyProcess.onData((data) => {
+                this._onDataCallback?.(data);
+                
+                // Track when data was last received
+                this._lastDataTime = Date.now();
+                
+                // If shell isn't ready yet, start/restart the ready timer
+                if (!this._shellReady) {
+                    this._scheduleReadyCheck();
+                }
+            });
+            
+            this._ptyProcess.onExit(() => {
+                console.log('PTY process exited');
+            });
+        }
     }
 
     public write(data: string): void {
@@ -78,51 +102,6 @@ export class PtyManager {
     public resize(cols: number, rows: number): void {
         this._ptyProcess?.resize(cols, rows);
     }
-
-    private _writeToTerminal(text: string): void {
-        if (!this._ptyProcess) return;
-        this._ptyProcess.write(text);
-    }
-
-    public sendFilePath(filePath: string): void {
-        // Escape single quotes for shell safety
-        const escapedPath = filePath.replace(/'/g, "\\'");
-        this._writeToTerminal(`'${escapedPath}'`);
-    }
-
-    public async sendFileData(fileData: string, fileName: string, fileType: string): Promise<void> {
-        try {
-            const os = require('os');
-            const path = require('path');
-            const fs = require('fs').promises;
-            
-            const tempDir = os.tmpdir();
-            const tempFileName = `claude-pilot-${Date.now()}-${fileName}`;
-            const tempFilePath = path.join(tempDir, tempFileName);
-            
-            // Handle different data formats
-            let buffer: Buffer;
-            if (fileData.startsWith('data:')) {
-                // Data URL format (images, binary files)
-                const base64Data = fileData.split(',')[1];
-                buffer = Buffer.from(base64Data, 'base64');
-            } else {
-                // Plain text content
-                buffer = Buffer.from(fileData, 'utf8');
-            }
-            
-            await fs.writeFile(tempFilePath, buffer);
-            await fs.chmod(tempFilePath, 0o644);
-            
-            // Send the temp file path
-            this._writeToTerminal(`'${tempFilePath}'`);
-            
-        } catch (error) {
-            console.error('Error writing file to temp:', error);
-            this._writeToTerminal(`"${fileName}"`);
-        }
-    }
-
 
     public dispose(): void {
         if (this._readyTimer) {
@@ -143,16 +122,8 @@ export class PtyManager {
             const timeSinceLastData = Date.now() - this._lastDataTime;
             if (timeSinceLastData >= 1000 && !this._shellReady) {
                 this._shellReady = true;
-                // Send configured claude command after shell has settled
-                const config = vscode.workspace.getConfiguration('claudePilot');
-                const autoCommand = config.get<string>('autoCommand', 'claude');
-                
-                if (autoCommand !== 'none') {
-                    // Use a slight delay to prevent focus stealing
-                    setTimeout(() => {
-                        this._ptyProcess?.write(`${autoCommand}\r`);
-                    }, 100);
-                }
+                // Send claude command after shell has settled
+                this._ptyProcess?.write('claude\r');
             }
         }, 1500); // Wait 1.5 seconds for shell to settle
     }
