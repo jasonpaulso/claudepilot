@@ -146,6 +146,18 @@ export class WebviewTemplate {
                     terminal.focus();
                 });
                 
+                // Custom keyboard handler for Cmd+Enter, Ctrl+Enter, or Shift+Enter
+                terminal.attachCustomKeyEventHandler((event) => {
+                    // Check for Cmd+Enter (Mac), Ctrl+Enter (Windows/Linux), or Shift+Enter
+                    if (event.type === 'keydown' && event.key === 'Enter' && (event.metaKey || event.ctrlKey || event.shiftKey)) {
+                        // Send newline to the PTY process (not just display it)
+                        vscode.postMessage({ command: 'data', data: '\\n' });
+                        return false; // Prevent default behavior
+                    }
+                    // Allow all other key events to proceed normally
+                    return true;
+                });
+                
                 // Terminal event handlers
                 terminal.onData((data) => {
                     vscode.postMessage({ command: 'data', data });
