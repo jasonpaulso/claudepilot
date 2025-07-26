@@ -95,6 +95,10 @@ export class PtyManager {
         }
     }
 
+    public updateDataCallback(callback: (data: string) => void): void {
+        this._onDataCallback = callback;
+    }
+
     public write(data: string): void {
         this._ptyProcess?.write(data);
     }

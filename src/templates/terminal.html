@@ -104,6 +104,31 @@
         .xterm .xterm-screen {
             background-color: transparent !important;
         }
+        
+        /* Fix input box styling that might be applied to terminal rows */
+        .xterm-rows {
+            background: none !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        .xterm-row {
+            line-height: normal !important;
+            height: auto !important;
+            background: none !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Ensure no input-like styling on terminal elements */
+        .xterm * {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+        }
     </style>
 </head>
 <body>

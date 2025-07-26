@@ -1,23 +1,23 @@
 /**
  * Template Utilities for Webview HTML Generation
- * 
+ *
  * Purpose:
  * - Generate HTML templates for the Claude Pilot terminal webview
  * - Handle xterm.js library loading and configuration
  * - Manage VS Code webview security and resource access
- * 
+ *
  * Responsibilities:
  * - Build complete HTML documents with proper script loading
  * - Configure xterm.js with VS Code theme integration
  * - Handle resource URI generation for webview security
  * - Provide timestamp-based cache busting for development
- * 
+ *
  * Key Features:
  * - Automatic VS Code theme color detection and mapping
  * - WebGL/Canvas rendering with automatic fallback
  * - Proper drag-drop event handling
  * - Terminal state persistence via VS Code API
- * 
+ *
  * Notes:
  * - All resource paths must be converted to webview URIs for security
  * - Template includes inline JavaScript for immediate execution
@@ -25,43 +25,101 @@
  * - Follows VS Code webview best practices for script loading
  */
 
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
+import * as fs from "fs";
+import * as path from "path";
+import * as vscode from "vscode";
 
 export class TemplateUtils {
-    public static getHtmlTemplate(
-        extensionUri: vscode.Uri, 
-        webview: vscode.Webview, 
-        timestamp: number
-    ): string {
-        // Get version from package.json
-        const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
-        let version = '0.1.0';
-        try {
-            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-            version = packageJson.version;
-        } catch (error) {
-            console.warn('Could not read version from package.json:', error);
-        }
+  public static getHtmlTemplate(
+    extensionUri: vscode.Uri,
+    webview: vscode.Webview,
+    timestamp: number
+  ): string {
+    // Get version from package.json
+    const packageJsonPath = path.join(__dirname, "..", "..", "package.json");
+    let version = "0.1.0";
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+      version = packageJson.version;
+    } catch (error) {
+      console.warn("Could not read version from package.json:", error);
+    }
 
-        // Build paths to xterm.js resources
-        const xtermPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'xterm', 'lib', 'xterm.js');
-        const xtermCssPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'xterm', 'css', 'xterm.css');
-        const fitAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-fit', 'lib', 'addon-fit.js');
-        const webglAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-webgl', 'lib', 'addon-webgl.js');
-        const canvasAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-canvas', 'lib', 'addon-canvas.js');
-        const webLinksAddonPath = path.join(__dirname, '..', '..', 'node_modules', '@xterm', 'addon-web-links', 'lib', 'addon-web-links.js');
+    // Build paths to xterm.js resources
+    const xtermPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "node_modules",
+      "@xterm",
+      "xterm",
+      "lib",
+      "xterm.js"
+    );
+    const xtermCssPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "node_modules",
+      "@xterm",
+      "xterm",
+      "css",
+      "xterm.css"
+    );
+    const fitAddonPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "node_modules",
+      "@xterm",
+      "addon-fit",
+      "lib",
+      "addon-fit.js"
+    );
+    const webglAddonPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "node_modules",
+      "@xterm",
+      "addon-webgl",
+      "lib",
+      "addon-webgl.js"
+    );
+    const canvasAddonPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "node_modules",
+      "@xterm",
+      "addon-canvas",
+      "lib",
+      "addon-canvas.js"
+    );
+    const webLinksAddonPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "node_modules",
+      "@xterm",
+      "addon-web-links",
+      "lib",
+      "addon-web-links.js"
+    );
 
-        // Convert to webview URIs for security
-        const xtermUri = webview.asWebviewUri(vscode.Uri.file(xtermPath));
-        const xtermCssUri = webview.asWebviewUri(vscode.Uri.file(xtermCssPath));
-        const fitAddonUri = webview.asWebviewUri(vscode.Uri.file(fitAddonPath));
-        const webglAddonUri = webview.asWebviewUri(vscode.Uri.file(webglAddonPath));
-        const canvasAddonUri = webview.asWebviewUri(vscode.Uri.file(canvasAddonPath));
-        const webLinksAddonUri = webview.asWebviewUri(vscode.Uri.file(webLinksAddonPath));
+    // Convert to webview URIs for security
+    const xtermUri = webview.asWebviewUri(vscode.Uri.file(xtermPath));
+    const xtermCssUri = webview.asWebviewUri(vscode.Uri.file(xtermCssPath));
+    const fitAddonUri = webview.asWebviewUri(vscode.Uri.file(fitAddonPath));
+    const webglAddonUri = webview.asWebviewUri(vscode.Uri.file(webglAddonPath));
+    const canvasAddonUri = webview.asWebviewUri(
+      vscode.Uri.file(canvasAddonPath)
+    );
+    const webLinksAddonUri = webview.asWebviewUri(
+      vscode.Uri.file(webLinksAddonPath)
+    );
 
-        return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -96,6 +154,72 @@ export class TemplateUtils {
         .xterm canvas {
             background-color: transparent !important;
         }
+        /* Fix input box styling that might be applied to terminal rows */
+        .xterm-rows {
+            background: none !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .xterm-row {
+            line-height: normal !important;
+            height: auto !important;
+            background: none !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        /* Ensure no input-like styling on terminal elements */
+        .xterm * {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+        }
+        
+        /* More aggressive overrides for VS Code webview styling */
+        .xterm .xterm-rows > div {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+        
+        /* Remove any form-like styling */
+        .xterm-rows * {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
+        
+        /* Fix spacing between lines */
+        .xterm-rows > div {
+            margin-bottom: 0 !important;
+            margin-top: 0 !important;
+            line-height: 1.0 !important;
+        }
+        
+        /* Force proper letter spacing on all spans */
+        .xterm-rows span {
+            letter-spacing: 0 !important;
+            display: inline !important;
+            white-space: pre !important;
+        }
+        
+        /* Override xterm's character measurement */
+        .xterm-char-measure-element {
+            letter-spacing: 0 !important;
+        }
+        
+        // /* Reset all input/textarea styles that VS Code might apply */
+        // input, textarea {
+        //     display: none !important;
+        // }
+        
         #terminal.drag-over::before {
             content: '';
             position: fixed;
@@ -287,10 +411,14 @@ export class TemplateUtils {
         
         const terminal = new Terminal({
             cursorBlink: true,
-            fontSize: parseInt(getThemeColor('--vscode-editor-font-size', '14').replace('px', '')) || 14,
-            fontFamily: getThemeColor('--vscode-editor-font-family', 'Consolas, Monaco, Menlo, monospace'),
+            fontSize: 14,  // Use fixed size to avoid measurement issues
+            fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',  // Use fixed font
+            lineHeight: 1.0,  // Use standard line height
+            letterSpacing: 0,  // Disable letter spacing
             allowTransparency: true,
-            theme: terminalTheme
+            theme: terminalTheme,
+            scrollback: 1000,  // Match VS Code default
+            scrollOnUserInput: false  // Don't auto-scroll to bottom on user input
         });
         
         const fitAddon = new FitAddon.FitAddon();
@@ -304,22 +432,23 @@ export class TemplateUtils {
             return true;
         });
 
-        // Try WebGL first, fallback to Canvas if WebGL fails
-        try {
-            const webglAddon = new WebglAddon.WebglAddon();
-            terminal.loadAddon(webglAddon);
-            console.log('WebGL renderer loaded successfully');
-        } catch (e) {
-            console.log('WebGL failed, falling back to Canvas:', e);
-            const canvasAddon = new CanvasAddon.CanvasAddon();
-            terminal.loadAddon(canvasAddon);
-        }
-
+        // Force canvas renderer to avoid DOM letter-spacing issues
+        const canvasAddon = new CanvasAddon.CanvasAddon();
+        terminal.loadAddon(canvasAddon);
+        
         terminal.loadAddon(fitAddon);
         terminal.loadAddon(webLinksAddon);
         
         terminal.open(document.getElementById('terminal'));
         fitAddon.fit();
+        
+        // Focus the terminal to enable input
+        terminal.focus();
+        
+        // Ensure terminal stays focused when clicked
+        document.getElementById('terminal').addEventListener('click', () => {
+            terminal.focus();
+        });
         
         terminal.onData((data) => {
             vscode.postMessage({ command: 'data', data });
@@ -364,12 +493,18 @@ export class TemplateUtils {
         
         // Simple resize on focus/visibility changes
         window.addEventListener('focus', () => {
-            setTimeout(() => fitAddon.fit(), 100);
+            setTimeout(() => {
+                fitAddon.fit();
+                terminal.focus();
+            }, 100);
         });
         
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                setTimeout(() => fitAddon.fit(), 100);
+                setTimeout(() => {
+                    fitAddon.fit();
+                    terminal.focus();
+                }, 100);
             }
         });
         
@@ -381,5 +516,5 @@ export class TemplateUtils {
     </script>
 </body>
 </html>`;
-    }
+  }
 }

@@ -44,8 +44,8 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
             });
             this._ptyManager.start();
         } else {
-            // PTY already exists - just reconnect data callback
-            this._ptyManager = new PtyManager((data: string) => {
+            // PTY already exists - just update the data callback
+            this._ptyManager.updateDataCallback((data: string) => {
                 if (this._view) {
                     this._view.webview.postMessage({ command: 'data', data });
                 }

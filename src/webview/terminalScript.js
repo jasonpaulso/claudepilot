@@ -71,25 +71,16 @@ const terminal = new Terminal({
     cursorBlink: true,
     fontSize: parseInt(getThemeColor('--vscode-editor-font-size', '14').replace('px', '')) || 14,
     fontFamily: getThemeColor('--vscode-editor-font-family', 'Consolas, Monaco, Menlo, monospace'),
+    lineHeight: 1.2,  // Add proper line height
+    letterSpacing: 0,  // Reset letter spacing
     theme: terminalTheme,
     // Essential scroll configuration
     scrollback: 1000,  // Match VS Code default
-    scrollOnUserInput: false  // Don't auto-scroll to bottom on user input
+    scrollOnUserInput: false,  // Don't auto-scroll to bottom on user input
+    rendererType: 'canvas'  // Force canvas renderer to avoid WebGL issues
 });
 
 const fitAddon = new FitAddon.FitAddon();
-
-// Try WebGL first, fallback to Canvas if WebGL fails
-try {
-    const webglAddon = new WebglAddon.WebglAddon();
-    terminal.loadAddon(webglAddon);
-    console.log('WebGL renderer loaded successfully');
-} catch (e) {
-    console.log('WebGL failed, falling back to Canvas:', e);
-    const canvasAddon = new CanvasAddon.CanvasAddon();
-    terminal.loadAddon(canvasAddon);
-}
-
 terminal.loadAddon(fitAddon);
 
 terminal.open(document.getElementById('terminal'));
