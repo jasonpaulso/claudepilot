@@ -432,9 +432,16 @@ export class TemplateUtils {
             return true;
         });
 
-        // Force canvas renderer to avoid DOM letter-spacing issues
-        const canvasAddon = new CanvasAddon.CanvasAddon();
-        terminal.loadAddon(canvasAddon);
+        // Try WebGL first, fallback to Canvas if WebGL fails
+        try {
+            const webglAddon = new WebglAddon.WebglAddon();
+            terminal.loadAddon(webglAddon);
+            console.log('WebGL renderer loaded successfully');
+        } catch (e) {
+            console.log('WebGL failed, falling back to Canvas:', e);
+            const canvasAddon = new CanvasAddon.CanvasAddon();
+            terminal.loadAddon(canvasAddon);
+        }
         
         terminal.loadAddon(fitAddon);
         terminal.loadAddon(webLinksAddon);
