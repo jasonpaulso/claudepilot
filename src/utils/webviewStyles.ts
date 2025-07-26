@@ -16,6 +16,7 @@ export const getTerminalStyles = (): string => `
     
     #terminal {
         width: 100%;
+        min-width: 500px;
         height: calc(100% - 32px);
     }
     

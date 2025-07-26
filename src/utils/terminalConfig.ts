@@ -3,27 +3,27 @@
  */
 
 export interface TerminalTheme {
-    background: string;
-    foreground: string;
-    cursor: string;
-    cursorAccent: string;
-    selection: string;
-    black: string;
-    red: string;
-    green: string;
-    yellow: string;
-    blue: string;
-    magenta: string;
-    cyan: string;
-    white: string;
-    brightBlack: string;
-    brightRed: string;
-    brightGreen: string;
-    brightYellow: string;
-    brightBlue: string;
-    brightMagenta: string;
-    brightCyan: string;
-    brightWhite: string;
+  background: string;
+  foreground: string;
+  cursor: string;
+  cursorAccent: string;
+  selection: string;
+  black: string;
+  red: string;
+  green: string;
+  yellow: string;
+  blue: string;
+  magenta: string;
+  cyan: string;
+  white: string;
+  brightBlack: string;
+  brightRed: string;
+  brightGreen: string;
+  brightYellow: string;
+  brightBlue: string;
+  brightMagenta: string;
+  brightCyan: string;
+  brightWhite: string;
 }
 
 export const getTerminalThemeScript = (): string => `
@@ -62,13 +62,13 @@ export const getTerminalThemeScript = (): string => `
 export const getTerminalConfig = (): string => `
     {
         cursorBlink: true,
-        fontSize: 14,
-        fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
+        // fontSize: 14,
+        // fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
         lineHeight: 1.0,
         letterSpacing: 0,
         allowTransparency: true,
         theme: terminalTheme,
         scrollback: 1000,
-        scrollOnUserInput: false
+        scrollOnUserInput: true
     }
 `;

@@ -42,12 +42,15 @@ export class PtyManager {
     private _lastDataTime = 0;
     private _readyTimer?: NodeJS.Timeout;
     private _onDataCallback?: (data: string) => void;
+    private _startingCommand?: string;
 
     constructor(onDataCallback?: (data: string) => void) {
         this._onDataCallback = onDataCallback;
     }
 
-    public start(): void {
+    public start(startingCommand?: string): void {
+        this._startingCommand = startingCommand;
+        
         // Use user's default shell with login shell flag
         const shell = process.platform === 'win32' ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
         const shellArgs = process.platform === 'win32' ? [] : ['-l'];
@@ -166,13 +169,16 @@ export class PtyManager {
             if (timeSinceLastData >= 1000 && !this._shellReady) {
                 this._shellReady = true;
                 
-                // Get the configured starting command
-                const config = vscode.workspace.getConfiguration('claudePilot');
-                const startingCommand = config.get<string>('startingCommand', 'claude');
+                // Use the starting command passed to start() method, or fall back to config
+                let commandToRun = this._startingCommand;
+                if (!commandToRun) {
+                    const config = vscode.workspace.getConfiguration('claudePilot');
+                    commandToRun = config.get<string>('startingCommand', 'claude');
+                }
                 
-                // Execute the configured command (if not 'none')
-                if (startingCommand !== 'none') {
-                    this._ptyProcess?.write(`${startingCommand}\r`);
+                // Execute the command (if not 'none')
+                if (commandToRun && commandToRun !== 'none') {
+                    this._ptyProcess?.write(`${commandToRun}\r`);
                 }
             }
         }, 1500); // Wait 1.5 seconds for shell to settle
