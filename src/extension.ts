@@ -6,6 +6,19 @@ export function activate(context: vscode.ExtensionContext) {
 
   const provider = new ClaudeCodeProvider(context.extensionUri);
 
+  // Register the WebviewView provider
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      ClaudeCodeProvider.viewType,
+      provider,
+      {
+        webviewOptions: {
+          retainContextWhenHidden: true,
+        },
+      }
+    )
+  );
+
   // Create status bar item
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
@@ -25,10 +38,10 @@ export function activate(context: vscode.ExtensionContext) {
       provider.refresh();
     }),
     vscode.commands.registerCommand("claudePilot.openTerminal", async () => {
-      await provider.openTerminal(context);
+      await provider.openTerminal();
     }),
-    vscode.commands.registerCommand("claudePilot.focus", () => {
-      provider.createOrShow(context);
+    vscode.commands.registerCommand("claudePilot.focus", async () => {
+      await vscode.commands.executeCommand('claudePilotView.focus');
     })
   );
 }
