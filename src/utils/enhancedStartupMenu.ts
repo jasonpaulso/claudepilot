@@ -512,7 +512,9 @@ export class EnhancedStartupMenu extends StartupMenu {
                         showStep1();
                     }
                 });
-                continueButton.addEventListener('click', submitConfiguration);
+                continueButton.addEventListener('click', () => {
+                    submitConfiguration();
+                });
                 
                 if (sessionBackButton) {
                     sessionBackButton.addEventListener('click', showStep1);

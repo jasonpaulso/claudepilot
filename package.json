@@ -53,6 +53,11 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "claudePilot.reinitialize",
+        "title": "Return to ClaudePilot Start Menu",
+        "icon": "$(home)"
+      },
+      {
         "command": "claudePilot.openTerminal",
         "title": "Open Claude Pilot",
         "icon": "$(robot)"
@@ -66,9 +71,14 @@
     "menus": {
       "view/title": [
         {
+          "command": "claudePilot.reinitialize",
+          "when": "view == claudePilotView",
+          "group": "navigation@1"
+        },
+        {
           "command": "claudePilot.refresh",
           "when": "view == claudePilot",
-          "group": "navigation"
+          "group": "navigation@2"
         }
       ],
       "commandPalette": [

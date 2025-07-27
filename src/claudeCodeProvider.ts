@@ -117,6 +117,32 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  public reinitialize() {
+    if (this._view) {
+      // Kill the current PTY if it exists
+      if (this._ptyManager) {
+        this._ptyManager.dispose();
+        this._ptyManager = undefined;
+        this._terminalInitialized = false;
+      }
+      
+      // Re-resolve the webview to show the startup menu again
+      const timeNow = new Date().getTime();
+      this._view.webview.html = TemplateUtils.getHtmlTemplate(
+        this._extensionUri,
+        this._view.webview,
+        timeNow
+      );
+      
+      // Create a new PTY manager
+      this._ptyManager = new PtyManager((data: string) => {
+        if (this._view) {
+          this._view.webview.postMessage({ command: "data", data });
+        }
+      });
+    }
+  }
+
   public async openTerminal() {
     if (this._view) {
       this._view.show(true);

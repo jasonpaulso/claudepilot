@@ -37,6 +37,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("claudePilot.refresh", () => {
       provider.refresh();
     }),
+    vscode.commands.registerCommand("claudePilot.reinitialize", () => {
+      provider.reinitialize();
+    }),
     vscode.commands.registerCommand("claudePilot.openTerminal", async () => {
       await provider.openTerminal();
     }),

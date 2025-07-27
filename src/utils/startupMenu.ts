@@ -228,14 +228,14 @@ export class StartupMenu {
                         `
                         ).join("")}
                     </div>
-                </div>
-                <div class="menu-footer">
-                    <div class="menu-actions">
-                        <button class="action-button secondary" id="backButton">← Back</button>
-                        <button class="action-button primary" id="continueButton">Continue →</button>
-                    </div>
+                    <div class="menu-footer">
+                        <div class="menu-actions">
+                            <button class="action-button secondary" id="backButton">← Back</button>
+                            <button class="action-button primary" id="continueButton">Continue →</button>
+                        </div>
                         <p>Press Tab to navigate • Enter to continue • Escape to go back</p>
                     </div>
+                </div>
             </div>
         `;
   }
@@ -766,7 +766,9 @@ export class StartupMenu {
 
                 // Button clicks
                 backButton.addEventListener('click', showStep1);
-                continueButton.addEventListener('click', submitConfiguration);
+                continueButton.addEventListener('click', () => {
+                    submitConfiguration();
+                });
 
                 // Menu option clicks
                 menuOptions.forEach((option, index) => {
