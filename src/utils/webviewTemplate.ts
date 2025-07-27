@@ -143,7 +143,16 @@ export class WebviewTemplate {
                 // Show terminal and hide menu
                 document.getElementById('terminal').classList.remove('hidden');
                 terminal.open(document.getElementById('terminal'));
-                fitAddon.fit();
+                
+                // Defer initial fit to ensure container is properly sized
+                setTimeout(() => {
+                    fitAddon.fit();
+                    // Send initial size to backend
+                    const dimensions = fitAddon.proposeDimensions();
+                    if (dimensions) {
+                        vscode.postMessage({ command: 'resize', cols: dimensions.cols, rows: dimensions.rows });
+                    }
+                }, 50);
                 
                 // Focus management
                 terminal.focus();
@@ -214,6 +223,27 @@ export class WebviewTemplate {
                     fitAddon.fit();
                 }
             });
+            
+            // Add ResizeObserver for more accurate terminal sizing
+            if (window.ResizeObserver) {
+                const resizeObserver = new ResizeObserver((entries) => {
+                    if (fitAddon && terminalInitialized) {
+                        // Use requestAnimationFrame to batch resize operations
+                        requestAnimationFrame(() => {
+                            fitAddon.fit();
+                        });
+                    }
+                });
+                
+                // Observe the terminal container once it's created
+                const checkTerminal = setInterval(() => {
+                    const terminalElement = document.getElementById('terminal');
+                    if (terminalElement && !terminalElement.classList.contains('hidden')) {
+                        resizeObserver.observe(terminalElement);
+                        clearInterval(checkTerminal);
+                    }
+                }, 100);
+            }
             
             window.addEventListener('focus', () => {
                 if (fitAddon && terminal && terminalInitialized) {

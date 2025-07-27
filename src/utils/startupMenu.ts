@@ -298,6 +298,11 @@ export class StartupMenu {
                 align-items: center;
             }
 
+            #step2 {
+                height: 100%;
+                overflow: hidden; /* Prevent double scrollbars */
+            }
+
             .menu-header {
                 text-align: center;
                 margin-bottom: 30px;
@@ -364,6 +369,8 @@ export class StartupMenu {
                 margin: 0 auto;
                 width: 100%;
                 flex: 1;
+                overflow-y: auto;
+                padding-right: 10px; /* Space for scrollbar */
             }
 
             .flag-category {
