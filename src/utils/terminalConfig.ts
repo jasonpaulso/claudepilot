@@ -37,8 +37,8 @@ export const getTerminalThemeScript = (): string => `
     const terminalTheme = {
         background: getThemeColor('--vscode-panel-background', getThemeColor('--vscode-editor-background', '#1e1e1e')),
         foreground: getThemeColor('--vscode-terminal-foreground', '#cccccc'),
-        cursor: getThemeColor('--vscode-terminal-selectionForeground', '#ffffff'),
-        cursorAccent: getThemeColor('--vscode-terminal-background', '#1e1e1e'),
+        cursor: getThemeColor('--vscode-terminal-cursor-foreground', getThemeColor('--vscode-terminal-foreground', '#ffffff')),
+        cursorAccent: getThemeColor('--vscode-terminal-cursor-background', getThemeColor('--vscode-terminal-background', '#1e1e1e')),
         selection: getThemeColor('--vscode-terminal-selectionBackground', '#264f78'),
         black: getThemeColor('--vscode-terminal-ansiBlack', '#000000'),
         red: getThemeColor('--vscode-terminal-ansiRed', '#cd3131'),
@@ -62,6 +62,7 @@ export const getTerminalThemeScript = (): string => `
 export const getTerminalConfig = (): string => `
     {
         cursorBlink: true,
+        cursorStyle: 'block',
         // fontSize: 14,
         // fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
         lineHeight: 1.0,

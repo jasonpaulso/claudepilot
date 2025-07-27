@@ -111,6 +111,10 @@ export class WebviewTemplate {
             let fitAddon = null;
             let webLinksAddon = null;
             
+            // Enhanced cursor positioning support
+            let lastLineContent = '';
+            let promptStartCol = 0;
+            
             // Function to initialize terminal after menu selection
             function initializeTerminal() {
                 // Initialize terminal
@@ -156,17 +160,60 @@ export class WebviewTemplate {
                 
                 // Focus management
                 terminal.focus();
-                document.getElementById('terminal').addEventListener('click', () => {
+                
+                // Enhanced mouse click handler for cursor positioning
+                document.getElementById('terminal').addEventListener('mousedown', (event) => {
+                    if (event.button === 0) { // Left click only
+                        // Get click position relative to terminal
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        const x = event.clientX - rect.left;
+                        const y = event.clientY - rect.top;
+                        
+                        // Get terminal dimensions
+                        const cols = terminal.cols;
+                        const rows = terminal.rows;
+                        
+                        // Calculate cell dimensions
+                        const cellWidth = rect.width / cols;
+                        const cellHeight = rect.height / rows;
+                        
+                        // Calculate which cell was clicked
+                        const clickedCol = Math.floor(x / cellWidth);
+                        const clickedRow = Math.floor(y / cellHeight);
+                        
+                        // Get current cursor position
+                        const currentRow = terminal.buffer.active.cursorY;
+                        const currentCol = terminal.buffer.active.cursorX;
+                        
+                        // Only handle clicks on the current line
+                        if (clickedRow === currentRow && clickedCol >= 0 && clickedCol < cols) {
+                            const delta = clickedCol - currentCol;
+                            
+                            if (delta !== 0) {
+                                // Send cursor movement sequences
+                                const moveChar = delta > 0 ? 'C' : 'D';
+                                const moveCount = Math.abs(delta);
+                                
+                                // Send escape sequence to move cursor
+                                vscode.postMessage({ 
+                                    command: 'data', 
+                                    data: '\\x1b[' + moveCount + moveChar 
+                                });
+                            }
+                        }
+                    }
                     terminal.focus();
                 });
                 
                 // Custom keyboard handler for Cmd+Enter, Ctrl+Enter, or Shift+Enter
                 terminal.attachCustomKeyEventHandler((event) => {
-                    // Check for Cmd+Enter (Mac), Ctrl+Enter (Windows/Linux), or Shift+Enter
-                    if (event.type === 'keydown' && event.key === 'Enter' && (event.metaKey || event.ctrlKey || event.shiftKey)) {
-                        // Send newline to the PTY process (not just display it)
-                        vscode.postMessage({ command: 'data', data: '\\n' });
-                        return false; // Prevent default behavior
+                    if (event.type === 'keydown') {
+                        // Check for Cmd+Enter (Mac), Ctrl+Enter (Windows/Linux), or Shift+Enter
+                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey || event.shiftKey)) {
+                            // Send newline to the PTY process (not just display it)
+                            vscode.postMessage({ command: 'data', data: '\\n' });
+                            return false; // Prevent default behavior
+                        }
                     }
                     // Allow all other key events to proceed normally
                     return true;
