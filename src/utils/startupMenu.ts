@@ -1,180 +1,181 @@
 /**
  * Startup Menu for Claude Pilot
- * 
+ *
  * Provides an interactive CLI menu for selecting Claude startup options
  * and configuring CLI flags before the terminal is initialized.
  */
 
 export interface MenuOption {
-    label: string;
-    command: string;
-    shortcut: string;
+  label: string;
+  command: string;
+  shortcut: string;
 }
 
 export interface FlagOption {
-    flag: string;
-    label: string;
-    description: string;
-    type: 'boolean' | 'text' | 'select';
-    default?: any;
-    options?: string[]; // For select type
-    placeholder?: string; // For text input
+  flag: string;
+  label: string;
+  description: string;
+  type: "boolean" | "text" | "select";
+  default?: any;
+  options?: string[]; // For select type
+  placeholder?: string; // For text input
 }
 
 export interface FlagCategory {
-    id: string;
-    label: string;
-    icon: string;
-    flags: FlagOption[];
+  id: string;
+  label: string;
+  icon: string;
+  flags: FlagOption[];
 }
 
 export class StartupMenu {
-    private static readonly MENU_OPTIONS: MenuOption[] = [
-        {
-            label: "Start a new Claude Code conversation",
-            command: "claude",
-            shortcut: "1"
-        },
-        {
-            label: "Continue previous Claude Code session",
-            command: "claude --continue",
-            shortcut: "2"
-        },
-        {
-            label: "Resume recent session (interactive)",
-            command: "claude --resume",
-            shortcut: "3"
-        }
-    ];
+  private static readonly MENU_OPTIONS: MenuOption[] = [
+    {
+      label: "Start a new Claude Code conversation",
+      command: "claude",
+      shortcut: "1",
+    },
+    {
+      label: "Continue previous Claude Code session",
+      command: "claude --continue",
+      shortcut: "2",
+    },
+    {
+      label: "Resume recent session (interactive)",
+      command: "claude --resume",
+      shortcut: "3",
+    },
+  ];
 
-    private static readonly FLAG_CATEGORIES: FlagCategory[] = [
+  private static readonly FLAG_CATEGORIES: FlagCategory[] = [
+    {
+      id: "quick",
+      label: "Quick Options",
+      icon: "⚡",
+      flags: [
         {
-            id: 'quick',
-            label: 'Quick Options',
-            icon: '⚡',
-            flags: [
-                {
-                    flag: '--dangerously-skip-permissions',
-                    label: 'Skip Permissions (YOLO)',
-                    description: 'Bypass all permission checks',
-                    type: 'boolean',
-                    default: false
-                },
-                {
-                    flag: '--ide',
-                    label: 'Auto-connect IDE',
-                    description: 'Connect to IDE on startup if available',
-                    type: 'boolean',
-                    default: false
-                }
-            ]
+          flag: "--dangerously-skip-permissions",
+          label: "Skip Permissions (YOLO)",
+          description: "Bypass all permission checks",
+          type: "boolean",
+          default: false,
         },
         {
-            id: 'debug',
-            label: 'Debug & Output',
-            icon: '🔍',
-            flags: [
-                {
-                    flag: '--debug',
-                    label: 'Debug Mode',
-                    description: 'Enable debug logging',
-                    type: 'boolean',
-                    default: false
-                },
-                {
-                    flag: '--verbose',
-                    label: 'Verbose Output',
-                    description: 'Override verbose mode from config',
-                    type: 'boolean',
-                    default: false
-                }
-            ]
+          flag: "--ide",
+          label: "Auto-connect IDE",
+          description: "Connect to IDE on startup if available",
+          type: "boolean",
+          default: false,
+        },
+      ],
+    },
+    {
+      id: "debug",
+      label: "Debug & Output",
+      icon: "🔍",
+      flags: [
+        {
+          flag: "--debug",
+          label: "Debug Mode",
+          description: "Enable debug logging",
+          type: "boolean",
+          default: false,
         },
         {
-            id: 'model',
-            label: 'Model Settings',
-            icon: '🤖',
-            flags: [
-                {
-                    flag: '--model',
-                    label: 'Model',
-                    description: 'Model to use (e.g. sonnet, opus)',
-                    type: 'text',
-                    placeholder: 'sonnet'
-                },
-                {
-                    flag: '--fallback-model',
-                    label: 'Fallback Model',
-                    description: 'Model to use when default is overloaded',
-                    type: 'text',
-                    placeholder: 'sonnet'
-                }
-            ]
+          flag: "--verbose",
+          label: "Verbose Output",
+          description: "Override verbose mode from config",
+          type: "boolean",
+          default: false,
+        },
+      ],
+    },
+    {
+      id: "model",
+      label: "Model Settings",
+      icon: "🤖",
+      flags: [
+        {
+          flag: "--model",
+          label: "Model",
+          description: "Model to use (e.g. sonnet, opus)",
+          type: "text",
+          placeholder: "sonnet",
         },
         {
-            id: 'permissions',
-            label: 'Permissions & Security',
-            icon: '🔒',
-            flags: [
-                {
-                    flag: '--permission-mode',
-                    label: 'Permission Mode',
-                    description: 'How to handle permissions',
-                    type: 'select',
-                    options: ['default', 'acceptEdits', 'bypassPermissions', 'plan'],
-                    default: 'default'
-                },
-                {
-                    flag: '--allowedTools',
-                    label: 'Allowed Tools',
-                    description: 'Comma or space-separated list (e.g. "Bash(git:*), Edit")',
-                    type: 'text',
-                    placeholder: 'Bash, Edit, Read'
-                },
-                {
-                    flag: '--disallowedTools',
-                    label: 'Disallowed Tools',
-                    description: 'Comma or space-separated list',
-                    type: 'text',
-                    placeholder: 'WebSearch, Write'
-                }
-            ]
+          flag: "--fallback-model",
+          label: "Fallback Model",
+          description: "Model to use when default is overloaded",
+          type: "text",
+          placeholder: "sonnet",
+        },
+      ],
+    },
+    {
+      id: "permissions",
+      label: "Permissions & Security",
+      icon: "🔒",
+      flags: [
+        {
+          flag: "--permission-mode",
+          label: "Permission Mode",
+          description: "How to handle permissions",
+          type: "select",
+          options: ["default", "acceptEdits", "bypassPermissions", "plan"],
+          default: "default",
         },
         {
-            id: 'advanced',
-            label: 'Advanced Configuration',
-            icon: '⚙️',
-            flags: [
-                {
-                    flag: '--append-system-prompt',
-                    label: 'Append System Prompt',
-                    description: 'Add to default system prompt',
-                    type: 'text',
-                    placeholder: 'Additional instructions...'
-                },
-                {
-                    flag: '--add-dir',
-                    label: 'Additional Directories',
-                    description: 'Allow tool access to more directories',
-                    type: 'text',
-                    placeholder: '/path/to/dir'
-                },
-                {
-                    flag: '--session-id',
-                    label: 'Session ID',
-                    description: 'Use specific session ID (UUID)',
-                    type: 'text',
-                    placeholder: 'uuid'
-                }
-            ]
-        }
-    ];
+          flag: "--allowedTools",
+          label: "Allowed Tools",
+          description:
+            'Comma or space-separated list (e.g. "Bash(git:*), Edit")',
+          type: "text",
+          placeholder: "Bash, Edit, Read",
+        },
+        {
+          flag: "--disallowedTools",
+          label: "Disallowed Tools",
+          description: "Comma or space-separated list",
+          type: "text",
+          placeholder: "WebSearch, Write",
+        },
+      ],
+    },
+    {
+      id: "advanced",
+      label: "Advanced Configuration",
+      icon: "⚙️",
+      flags: [
+        {
+          flag: "--append-system-prompt",
+          label: "Append System Prompt",
+          description: "Add to default system prompt",
+          type: "text",
+          placeholder: "Additional instructions...",
+        },
+        {
+          flag: "--add-dir",
+          label: "Additional Directories",
+          description: "Allow tool access to more directories",
+          type: "text",
+          placeholder: "/path/to/dir",
+        },
+        {
+          flag: "--session-id",
+          label: "Session ID",
+          description: "Use specific session ID (UUID)",
+          type: "text",
+          placeholder: "uuid",
+        },
+      ],
+    },
+  ];
 
-    /**
-     * Generate the HTML for the startup menu
-     */
-    public static generateMenuHtml(): string {
-        return `
+  /**
+   * Generate the HTML for the startup menu
+   */
+  public static generateMenuHtml(): string {
+    return `
             <div id="startup-menu" class="startup-menu">
                 <div class="menu-step" id="step1">
                     <div class="menu-header">
@@ -182,12 +183,14 @@ export class StartupMenu {
                         <p>Select an option to start:</p>
                     </div>
                     <div class="menu-options">
-                        ${this.MENU_OPTIONS.map((option, index) => `
+                        ${this.MENU_OPTIONS.map(
+                          (option, index) => `
                             <div class="menu-option" data-index="${index}" tabindex="0">
                                 <span class="option-shortcut">${option.shortcut})</span>
                                 <span class="option-label">${option.label}</span>
                             </div>
-                        `).join('')}
+                        `
+                        ).join("")}
                     </div>
                     <div class="menu-footer">
                         <p>Use arrow keys or number keys to select</p>
@@ -200,82 +203,110 @@ export class StartupMenu {
                         <p>Select additional flags (optional):</p>
                     </div>
                     <div class="flag-categories">
-                        ${this.FLAG_CATEGORIES.map(category => `
-                            <div class="flag-category" data-category="${category.id}">
+                        ${this.FLAG_CATEGORIES.map(
+                          (category) => `
+                            <div class="flag-category" data-category="${
+                              category.id
+                            }">
                                 <div class="category-header">
-                                    <span class="category-icon">${category.icon}</span>
-                                    <span class="category-label">${category.label}</span>
+                                    <span class="category-icon">${
+                                      category.icon
+                                    }</span>
+                                    <span class="category-label">${
+                                      category.label
+                                    }</span>
                                     <span class="category-toggle">▼</span>
                                 </div>
                                 <div class="category-content">
-                                    ${category.flags.map(flag => this.generateFlagHtml(flag)).join('')}
+                                    ${category.flags
+                                      .map((flag) =>
+                                        this.generateFlagHtml(flag)
+                                      )
+                                      .join("")}
                                 </div>
                             </div>
-                        `).join('')}
+                        `
+                        ).join("")}
                     </div>
+                </div>
+                <div class="menu-footer">
                     <div class="menu-actions">
                         <button class="action-button secondary" id="backButton">← Back</button>
                         <button class="action-button primary" id="continueButton">Continue →</button>
                     </div>
-                    <div class="menu-footer">
                         <p>Press Tab to navigate • Enter to continue • Escape to go back</p>
                     </div>
-                </div>
             </div>
         `;
-    }
+  }
 
-    /**
-     * Generate HTML for a single flag option
-     */
-    private static generateFlagHtml(flag: FlagOption): string {
-        switch (flag.type) {
-            case 'boolean':
-                return `
+  /**
+   * Generate HTML for a single flag option
+   */
+  private static generateFlagHtml(flag: FlagOption): string {
+    switch (flag.type) {
+      case "boolean":
+        return `
                     <div class="flag-option" data-flag="${flag.flag}">
                         <label class="flag-toggle">
-                            <input type="checkbox" ${flag.default ? 'checked' : ''} />
+                            <input type="checkbox" ${
+                              flag.default ? "checked" : ""
+                            } />
                             <span class="toggle-slider"></span>
                             <div class="flag-info">
                                 <span class="flag-label">${flag.label}</span>
-                                <span class="flag-description">${flag.description}</span>
+                                <span class="flag-description">${
+                                  flag.description
+                                }</span>
                             </div>
                         </label>
                     </div>
                 `;
-            case 'text':
-                return `
+      case "text":
+        return `
                     <div class="flag-option" data-flag="${flag.flag}">
                         <div class="flag-info">
                             <span class="flag-label">${flag.label}</span>
-                            <span class="flag-description">${flag.description}</span>
+                            <span class="flag-description">${
+                              flag.description
+                            }</span>
                         </div>
-                        <input type="text" class="flag-input" placeholder="${flag.placeholder || ''}" />
+                        <input type="text" class="flag-input" placeholder="${
+                          flag.placeholder || ""
+                        }" />
                     </div>
                 `;
-            case 'select':
-                return `
+      case "select":
+        return `
                     <div class="flag-option" data-flag="${flag.flag}">
                         <div class="flag-info">
                             <span class="flag-label">${flag.label}</span>
-                            <span class="flag-description">${flag.description}</span>
+                            <span class="flag-description">${
+                              flag.description
+                            }</span>
                         </div>
                         <select class="flag-select">
                             <option value="">None</option>
-                            ${flag.options?.map(opt => `
-                                <option value="${opt}" ${opt === flag.default ? 'selected' : ''}>${opt}</option>
-                            `).join('')}
+                            ${flag.options
+                              ?.map(
+                                (opt) => `
+                                <option value="${opt}" ${
+                                  opt === flag.default ? "selected" : ""
+                                }>${opt}</option>
+                            `
+                              )
+                              .join("")}
                         </select>
                     </div>
                 `;
-        }
     }
+  }
 
-    /**
-     * Generate CSS styles for the menu
-     */
-    public static generateMenuStyles(): string {
-        return `
+  /**
+   * Generate CSS styles for the menu
+   */
+  public static generateMenuStyles(): string {
+    return `
             .startup-menu {
                 display: flex;
                 flex-direction: column;
@@ -285,6 +316,7 @@ export class StartupMenu {
                 background-color: var(--vscode-editor-background);
                 padding: 20px;
                 overflow-y: auto;
+                flex: 1;
             }
 
             .menu-step {
@@ -562,13 +594,13 @@ export class StartupMenu {
                 display: none !important;
             }
         `;
-    }
+  }
 
-    /**
-     * Generate JavaScript for menu interaction
-     */
-    public static generateMenuScript(): string {
-        return `
+  /**
+   * Generate JavaScript for menu interaction
+   */
+  public static generateMenuScript(): string {
+    return `
             (function() {
                 const menu = document.getElementById('startup-menu');
                 const step1 = document.getElementById('step1');
@@ -737,12 +769,12 @@ export class StartupMenu {
                 updateSelection();
             })();
         `;
-    }
+  }
 
-    /**
-     * Get the command for a given selection
-     */
-    public static getCommand(index: number): string | undefined {
-        return this.MENU_OPTIONS[index]?.command;
-    }
+  /**
+   * Get the command for a given selection
+   */
+  public static getCommand(index: number): string | undefined {
+    return this.MENU_OPTIONS[index]?.command;
+  }
 }

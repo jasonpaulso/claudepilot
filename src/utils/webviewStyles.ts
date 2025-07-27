@@ -12,6 +12,9 @@ export const getTerminalStyles = (): string => `
         background-color: var(--vscode-panel-background, #1e1e1e);
         color: var(--vscode-terminal-foreground, #cccccc);
         font-family: var(--vscode-editor-font-family, 'Courier New', monospace);
+        display: flex;
+        flex-direction: column;
+        overflow-y: scroll;
     }
     
     #terminal {
