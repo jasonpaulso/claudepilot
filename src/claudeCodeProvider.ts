@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { PtyManager } from "./terminal/ptyManager";
 import { TemplateUtils } from "./utils/templateUtils";
+import { SessionReader } from "./utils/sessionReader";
 
 export class ClaudeCodeProvider {
   public static readonly viewType = "claudePilotView";
@@ -110,6 +111,10 @@ export class ClaudeCodeProvider {
               }
             }
             break;
+          case "requestSessions":
+            // Handle request for Claude sessions
+            this._handleSessionRequest(message.workspacePath);
+            break;
         }
       },
       undefined,
@@ -163,6 +168,26 @@ export class ClaudeCodeProvider {
       await vscode.window.showTextDocument(uri);
     } catch (error) {
       console.error("Failed to open file:", error);
+    }
+  }
+
+  private async _handleSessionRequest(workspacePath: string) {
+    try {
+      const sessions = await SessionReader.listProjectSessions(workspacePath);
+      if (this._panel) {
+        this._panel.webview.postMessage({ 
+          command: "sessionData", 
+          sessions: sessions 
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch sessions:", error);
+      if (this._panel) {
+        this._panel.webview.postMessage({ 
+          command: "sessionData", 
+          sessions: [] 
+        });
+      }
     }
   }
 

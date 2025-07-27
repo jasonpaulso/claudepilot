@@ -7,6 +7,7 @@ import { getDragDropScript } from "./dragDropHandler";
 import { getTerminalConfig, getTerminalThemeScript } from "./terminalConfig";
 import { getTerminalStyles } from "./webviewStyles";
 import { StartupMenu } from "./startupMenu";
+import { EnhancedStartupMenu } from "./enhancedStartupMenu";
 
 export interface WebviewResources {
   xtermJs: vscode.Uri;
@@ -39,7 +40,8 @@ export class WebviewTemplate {
   public static generateHtml(
     resources: WebviewResources,
     version: string,
-    timestamp: number
+    timestamp: number,
+    workspacePath: string = ''
   ): string {
     const nonce = this.generateNonce();
 
@@ -59,11 +61,14 @@ export class WebviewTemplate {
     <style>
         ${getTerminalStyles()}
         ${StartupMenu.generateMenuStyles()}
+        ${EnhancedStartupMenu.generateSessionBrowserStyles()}
     </style>
 </head>
 <body>
     <div class="version-overlay">v${version}</div>
-    ${StartupMenu.generateMenuHtml()}
+    <div id="startup-menu-container">
+        ${StartupMenu.generateMenuHtml()}
+    </div>
     <div id="terminal" class="hidden"></div>
     
     <!-- External libraries -->
@@ -75,7 +80,7 @@ export class WebviewTemplate {
     
     <!-- Main terminal script -->
     <script nonce="${nonce}">
-        ${this.getMainScript()}
+        ${this.getMainScript(workspacePath)}
     </script>
 </body>
 </html>`;
@@ -84,7 +89,7 @@ export class WebviewTemplate {
   /**
    * Get the main terminal initialization script
    */
-  private static getMainScript(): string {
+  private static getMainScript(workspacePath: string): string {
     return `
         (function() {
             'use strict';
@@ -236,8 +241,8 @@ export class WebviewTemplate {
                 setupDragCapture();
             }
             
-            // Add startup menu script
-            ${StartupMenu.generateMenuScript()}
+            // Add enhanced startup menu script with session browser support
+            ${EnhancedStartupMenu.generateEnhancedMenuScript(workspacePath)}
         })();
         `;
   }

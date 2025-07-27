@@ -31,6 +31,9 @@ export class TemplateUtils {
             console.warn('Could not read version from package.json:', error);
         }
 
+        // Get workspace path
+        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+
         // Build resource URIs
         const resources: WebviewResources = {
             xtermJs: webview.asWebviewUri(vscode.Uri.joinPath(
@@ -83,7 +86,7 @@ export class TemplateUtils {
             ))
         };
 
-        // Use the new template generator
-        return WebviewTemplate.generateHtml(resources, version, timestamp);
+        // Use the new template generator with workspace path
+        return WebviewTemplate.generateHtml(resources, version, timestamp, workspacePath);
     }
 }
