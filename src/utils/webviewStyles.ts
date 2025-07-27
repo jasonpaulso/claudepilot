@@ -5,8 +5,6 @@
 export const getTerminalStyles = (): string => `
     body {
         margin: 0;
-        padding: 16px;
-        height: 100vh;
         box-sizing: border-box;
         overflow: hidden;
         background-color: var(--vscode-panel-background, #1e1e1e);
@@ -15,12 +13,21 @@ export const getTerminalStyles = (): string => `
         display: flex;
         flex-direction: column;
         overflow-y: scroll;
+        position: fixed;
+        top:0;
+        left: 0;
+        right: 0;
+        bottom: 0;
     }
     
     #terminal {
         width: 100%;
-        min-width: 500px;
-        height: calc(100% - 32px);
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        
     }
     
     /* Ensure xterm uses transparent background to inherit VS Code theme */

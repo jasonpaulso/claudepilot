@@ -310,19 +310,25 @@ export class StartupMenu {
             .startup-menu {
                 display: flex;
                 flex-direction: column;
-                height: 100%;
+                // height: 100%;
                 font-family: var(--vscode-font-family);
                 color: var(--vscode-foreground);
                 background-color: var(--vscode-editor-background);
                 padding: 20px;
                 overflow-y: auto;
-                flex: 1;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                // flex: 1;
             }
 
             .menu-step {
                 display: flex;
                 flex-direction: column;
-                min-height: 100%;
+                padding: 20px;
+                // min-height: 100%;
             }
 
             #step1 {
@@ -331,7 +337,7 @@ export class StartupMenu {
             }
 
             #step2 {
-                height: 100%;
+                // height: 100%;
                 overflow: hidden; /* Prevent double scrollbars */
             }
 
@@ -408,7 +414,7 @@ export class StartupMenu {
             .flag-category {
                 border: 1px solid var(--vscode-panel-border);
                 border-radius: 6px;
-                overflow: hidden;
+                // overflow: hidden;
                 background-color: var(--vscode-editor-background);
             }
 
@@ -582,7 +588,11 @@ export class StartupMenu {
             .menu-footer {
                 text-align: center;
                 margin-top: auto;
-                padding-top: 20px;
+                // padding-top: 20px;
+                // padding-bottom: 20px;
+                position: sticky;
+                bottom:0;
+                background-color: var(--vscode-editor-background);
             }
 
             .menu-footer p {

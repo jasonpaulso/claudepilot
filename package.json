@@ -143,5 +143,8 @@
     "@xterm/addon-webgl": "^0.18.0",
     "@xterm/xterm": "^5.3.0",
     "vsce": "^2.15.0"
+  },
+  "volta": {
+    "node": "22.17.1"
   }
 }
