@@ -4,8 +4,8 @@
  * Extends the startup menu with session browsing capability
  */
 
-import { SessionReader, SessionSummary } from "./sessionReader"
-import { StartupMenu } from "./startupMenu"
+import { SessionReader, SessionSummary } from "./sessionReader";
+import { StartupMenu } from "./startupMenu";
 
 export class EnhancedStartupMenu extends StartupMenu {
   /**
@@ -90,10 +90,8 @@ export class EnhancedStartupMenu extends StartupMenu {
                 display: flex;
                 flex-direction: column;
                 gap: 10px;
-                max-width: 600px;
                 margin: 0 auto 20px;
                 width: 100%;
-                max-height: 400px;
                 overflow-y: auto;
             }
 
