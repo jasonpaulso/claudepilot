@@ -10,83 +10,103 @@
  * to the new modular template system.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as vscode from 'vscode';
-import { WebviewTemplate, WebviewResources } from './webviewTemplate';
+import * as fs from "fs";
+import * as path from "path";
+import * as vscode from "vscode";
+import { WebviewResources, WebviewTemplate } from "./webviewTemplate";
 
 export class TemplateUtils {
-    public static getHtmlTemplate(
-        extensionUri: vscode.Uri,
-        webview: vscode.Webview,
-        timestamp: number
-    ): string {
-        // Get version from package.json
-        const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
-        let version = '0.1.0';
-        try {
-            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-            version = packageJson.version;
-        } catch (error) {
-            console.warn('Could not read version from package.json:', error);
-        }
-
-        // Get workspace path
-        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
-
-        // Build resource URIs
-        const resources: WebviewResources = {
-            xtermJs: webview.asWebviewUri(vscode.Uri.joinPath(
-                extensionUri,
-                'node_modules',
-                '@xterm',
-                'xterm',
-                'lib',
-                'xterm.js'
-            )),
-            xtermCss: webview.asWebviewUri(vscode.Uri.joinPath(
-                extensionUri,
-                'node_modules',
-                '@xterm',
-                'xterm',
-                'css',
-                'xterm.css'
-            )),
-            fitAddon: webview.asWebviewUri(vscode.Uri.joinPath(
-                extensionUri,
-                'node_modules',
-                '@xterm',
-                'addon-fit',
-                'lib',
-                'addon-fit.js'
-            )),
-            webglAddon: webview.asWebviewUri(vscode.Uri.joinPath(
-                extensionUri,
-                'node_modules',
-                '@xterm',
-                'addon-webgl',
-                'lib',
-                'addon-webgl.js'
-            )),
-            canvasAddon: webview.asWebviewUri(vscode.Uri.joinPath(
-                extensionUri,
-                'node_modules',
-                '@xterm',
-                'addon-canvas',
-                'lib',
-                'addon-canvas.js'
-            )),
-            webLinksAddon: webview.asWebviewUri(vscode.Uri.joinPath(
-                extensionUri,
-                'node_modules',
-                '@xterm',
-                'addon-web-links',
-                'lib',
-                'addon-web-links.js'
-            ))
-        };
-
-        // Use the new template generator with workspace path
-        return WebviewTemplate.generateHtml(resources, version, timestamp, workspacePath);
+  public static getHtmlTemplate(
+    extensionUri: vscode.Uri,
+    webview: vscode.Webview,
+    timestamp: number,
+    sessionId: string = ""
+  ): string {
+    // Get version from package.json
+    const packageJsonPath = path.join(__dirname, "..", "..", "package.json");
+    let version = "0.1.0";
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+      version = packageJson.version;
+    } catch (error) {
+      console.warn("Could not read version from package.json:", error);
     }
+
+    // Get workspace path
+    const workspacePath =
+      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
+
+    // Build resource URIs
+    const resources: WebviewResources = {
+      xtermJs: webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          extensionUri,
+          "node_modules",
+          "@xterm",
+          "xterm",
+          "lib",
+          "xterm.js"
+        )
+      ),
+      xtermCss: webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          extensionUri,
+          "node_modules",
+          "@xterm",
+          "xterm",
+          "css",
+          "xterm.css"
+        )
+      ),
+      fitAddon: webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          extensionUri,
+          "node_modules",
+          "@xterm",
+          "addon-fit",
+          "lib",
+          "addon-fit.js"
+        )
+      ),
+      webglAddon: webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          extensionUri,
+          "node_modules",
+          "@xterm",
+          "addon-webgl",
+          "lib",
+          "addon-webgl.js"
+        )
+      ),
+      canvasAddon: webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          extensionUri,
+          "node_modules",
+          "@xterm",
+          "addon-canvas",
+          "lib",
+          "addon-canvas.js"
+        )
+      ),
+      webLinksAddon: webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          extensionUri,
+          "node_modules",
+          "@xterm",
+          "addon-web-links",
+          "lib",
+          "addon-web-links.js"
+        )
+      ),
+    };
+
+    // Use the new template generator with workspace path
+    return WebviewTemplate.generateHtml(
+      resources,
+      version,
+      timestamp,
+      workspacePath,
+      sessionId
+    );
+  }
 }

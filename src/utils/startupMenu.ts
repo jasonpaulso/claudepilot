@@ -160,13 +160,6 @@ export class StartupMenu {
           type: "text",
           placeholder: "/path/to/dir",
         },
-        {
-          flag: "--session-id",
-          label: "Session ID",
-          description: "Use specific session ID (UUID)",
-          type: "text",
-          placeholder: "uuid",
-        },
       ],
     },
   ];

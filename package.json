@@ -43,6 +43,13 @@
           "name": "Claude Pilot",
           "type": "webview",
           "icon": "$(robot)"
+        },
+        {
+          "id": "claudePilotTodos",
+          "name": "Todos",
+          "type": "tree",
+          "icon": "$(checklist)",
+          "visibility": "visible"
         }
       ]
     },
@@ -66,6 +73,130 @@
         "command": "claudePilot.focus",
         "title": "Show Claude Pilot",
         "icon": "$(robot)"
+      },
+      {
+        "command": "claudePilot.explainCode",
+        "title": "Explain Code",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.fixCode",
+        "title": "Fix Code",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.improveCode",
+        "title": "Improve Code",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.addToContext",
+        "title": "Add To Context",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.addFileToChat",
+        "title": "Add File to Chat",
+        "category": "Claude Pilot",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "claudePilot.addTerminalToContext",
+        "title": "Add to Claude Pilot Context",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.fixTerminalCommand",
+        "title": "Ask Claude Pilot to fix This Command",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.explainTerminalCommand",
+        "title": "Ask Claude Pilot to explain This Command",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.refreshTodos",
+        "title": "Refresh Todos",
+        "category": "Claude Pilot",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "claudePilot.copyTodoContent",
+        "title": "Copy Todo Content",
+        "category": "Claude Pilot",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "claudePilot.insertTodoIntoEditor",
+        "title": "Insert Todo into Editor",
+        "category": "Claude Pilot",
+        "icon": "$(insert)"
+      },
+      {
+        "command": "claudePilot.markTodoComplete",
+        "title": "Mark Todo Complete",
+        "category": "Claude Pilot",
+        "icon": "$(check)"
+      },
+      {
+        "command": "claudePilot.changeTodoPriority",
+        "title": "Change Todo Priority",
+        "category": "Claude Pilot",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "claudePilot.clearCompletedTodos",
+        "title": "Clear Completed Todos",
+        "category": "Claude Pilot",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "claudePilot.searchTodos",
+        "title": "Search Todos",
+        "category": "Claude Pilot",
+        "icon": "$(search)"
+      },
+      {
+        "command": "claudePilot.clearTodoFilter",
+        "title": "Clear Todo Filter",
+        "category": "Claude Pilot",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "claudePilot.showSessionInfo",
+        "title": "Show Session Info",
+        "category": "Claude Pilot",
+        "icon": "$(info)"
+      },
+      {
+        "command": "claudePilot.exportTodos",
+        "title": "Export Todos",
+        "category": "Claude Pilot",
+        "icon": "$(export)"
+      },
+      {
+        "command": "claudePilotTodos.focus",
+        "title": "Focus Todo View",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.switchTodoSession",
+        "title": "Switch Todo Session",
+        "category": "Claude Pilot",
+        "icon": "$(history)"
+      },
+      {
+        "command": "claudePilot.clearSessionHistory",
+        "title": "Clear Session History",
+        "category": "Claude Pilot",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "claudePilot.submenu",
+        "label": "Claude Pilot"
       }
     ],
     "menus": {
@@ -79,6 +210,58 @@
           "command": "claudePilot.refresh",
           "when": "view == claudePilot",
           "group": "navigation@2"
+        },
+        {
+          "command": "claudePilot.refreshTodos",
+          "when": "view == claudePilotTodos",
+          "group": "navigation@1"
+        },
+        {
+          "command": "claudePilot.searchTodos",
+          "when": "view == claudePilotTodos",
+          "group": "navigation@2"
+        },
+        {
+          "command": "claudePilot.clearCompletedTodos",
+          "when": "view == claudePilotTodos",
+          "group": "2_actions@1"
+        },
+        {
+          "command": "claudePilot.exportTodos",
+          "when": "view == claudePilotTodos",
+          "group": "2_actions@2"
+        },
+        {
+          "command": "claudePilot.showSessionInfo",
+          "when": "view == claudePilotTodos",
+          "group": "3_info@1"
+        },
+        {
+          "command": "claudePilot.switchTodoSession",
+          "when": "view == claudePilotTodos",
+          "group": "3_info@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "claudePilot.copyTodoContent",
+          "when": "view == claudePilotTodos && viewItem == todo-item",
+          "group": "inline@1"
+        },
+        {
+          "command": "claudePilot.insertTodoIntoEditor",
+          "when": "view == claudePilotTodos && viewItem == todo-item",
+          "group": "inline@2"
+        },
+        {
+          "command": "claudePilot.markTodoComplete",
+          "when": "view == claudePilotTodos && viewItem == todo-item",
+          "group": "1_modify@1"
+        },
+        {
+          "command": "claudePilot.changeTodoPriority",
+          "when": "view == claudePilotTodos && viewItem == todo-item",
+          "group": "1_modify@2"
         }
       ],
       "commandPalette": [
@@ -103,8 +286,72 @@
           "when": "true",
           "group": "navigation"
         }
+      ],
+      "editor/title/context": [
+        {
+          "command": "claudePilot.addFileToChat",
+          "group": "2_workspace@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "claudePilot.submenu",
+          "group": "1_modification",
+          "when": "editorHasSelection || editorTextFocus"
+        }
+      ],
+      "claudePilot.submenu": [
+        {
+          "command": "claudePilot.explainCode",
+          "group": "1_claude@1"
+        },
+        {
+          "command": "claudePilot.fixCode",
+          "group": "1_claude@2"
+        },
+        {
+          "command": "claudePilot.improveCode",
+          "group": "1_claude@3"
+        },
+        {
+          "command": "claudePilot.addToContext",
+          "group": "1_claude@4"
+        }
+      ],
+      "terminal/context": [
+        {
+          "command": "claudePilot.addTerminalToContext",
+          "group": "1_modification"
+        },
+        {
+          "command": "claudePilot.fixTerminalCommand",
+          "group": "1_modification"
+        },
+        {
+          "command": "claudePilot.explainTerminalCommand",
+          "group": "1_modification"
+        }
       ]
     },
+    "keybindings": [
+      {
+        "command": "claudePilot.searchTodos",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
+        "when": "focusedView == claudePilotTodos"
+      },
+      {
+        "command": "claudePilot.refreshTodos",
+        "key": "ctrl+r",
+        "mac": "cmd+r",
+        "when": "focusedView == claudePilotTodos"
+      },
+      {
+        "command": "claudePilot.clearTodoFilter",
+        "key": "escape",
+        "when": "focusedView == claudePilotTodos"
+      }
+    ],
     "configuration": {
       "title": "Claude Pilot",
       "properties": {

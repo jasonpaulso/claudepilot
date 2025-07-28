@@ -415,7 +415,7 @@ export class EnhancedStartupMenu extends StartupMenu {
                         const select = option.querySelector('.flag-select');
                         
                         // Skip session-id if already in command
-                        if (flag === '--session-id' && selectedSessionId) {
+                        if (flag === '--resume-id' && selectedSessionId) {
                             return;
                         }
                         

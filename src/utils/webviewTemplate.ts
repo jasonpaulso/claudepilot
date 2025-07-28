@@ -4,10 +4,10 @@
 
 import * as vscode from "vscode";
 import { getDragDropScript } from "./dragDropHandler";
+import { EnhancedStartupMenu } from "./enhancedStartupMenu";
+import { StartupMenu } from "./startupMenu";
 import { getTerminalConfig, getTerminalThemeScript } from "./terminalConfig";
 import { getTerminalStyles } from "./webviewStyles";
-import { StartupMenu } from "./startupMenu";
-import { EnhancedStartupMenu } from "./enhancedStartupMenu";
 
 export interface WebviewResources {
   xtermJs: vscode.Uri;
@@ -41,7 +41,8 @@ export class WebviewTemplate {
     resources: WebviewResources,
     version: string,
     timestamp: number,
-    workspacePath: string = ''
+    workspacePath: string = "",
+    sessionId: string = ""
   ): string {
     const nonce = this.generateNonce();
 
@@ -65,7 +66,7 @@ export class WebviewTemplate {
     </style>
 </head>
 <body>
-    <div class="version-overlay">v${version}</div>
+    <div class="version-overlay">s${sessionId} | v${version}</div>
     <div id="startup-menu-container">
         ${StartupMenu.generateMenuHtml()}
     </div>
@@ -119,7 +120,7 @@ export class WebviewTemplate {
             function initializeTerminal() {
                 // Initialize terminal
                 terminal = new Terminal(${getTerminalConfig()});
-                
+
                 fitAddon = new FitAddon.FitAddon();
                 webLinksAddon = new WebLinksAddon.WebLinksAddon((event, uri) => {
                     // Handle file paths by opening in VS Code editor
@@ -259,6 +260,46 @@ export class WebviewTemplate {
                     case 'initializeTerminal':
                         if (!terminalInitialized) {
                             initializeTerminal();
+                        }
+                        break;
+                    case 'bypassMenuWithCommand':
+                        // Bypass the menu and start with the given command
+                        const menu = document.getElementById('startup-menu');
+                        if (menu) {
+                            menu.classList.add('hidden');
+                        }
+                        vscode.postMessage({
+                            command: 'menuSelection',
+                            selectedCommand: message.selectedCommand
+                        });
+                        break;
+                    case 'requestTerminalContent':
+                        if (terminal) {
+                            // Get terminal buffer content
+                            const buffer = terminal.buffer.active;
+                            let content = '';
+                            
+                            // Get last 50 lines of terminal content
+                            const linesToGet = Math.min(50, buffer.length);
+                            const startLine = Math.max(0, buffer.baseY + buffer.cursorY - linesToGet);
+                            
+                            for (let i = 0; i < linesToGet; i++) {
+                                const line = buffer.getLine(startLine + i);
+                                if (line) {
+                                    content += line.translateToString(true) + '\\n';
+                                }
+                            }
+                            
+                            // Get selection if any
+                            const selection = terminal.getSelection();
+                            
+                            // Send back to extension
+                            vscode.postMessage({
+                                command: 'terminalContent',
+                                content: content.trim(),
+                                selection: selection,
+                                requestId: message.requestId
+                            });
                         }
                         break;
                 }
