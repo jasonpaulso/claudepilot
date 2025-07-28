@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { ClaudeCodeProvider } from "./claudeCodeProvider";
-import { TodoTreeProvider, registerTodoCommands, TodoStatusBar } from "./todos";
-import { TodoManager } from "./todos/todoManagerWithHooks";
+import { TodoManager, TodoTreeProvider, registerTodoCommands, TodoStatusBar } from "./todos";
 import { registerSettingsCommands } from "./commands/settingsCommands";
 import { registerScmCommands } from "./commands/scmCommands";
 import { OutputChannelManager } from "./utils/outputChannel";

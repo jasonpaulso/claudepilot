@@ -6,7 +6,7 @@
 
 export { TodoWatcher, TodoFileEvent } from './todoWatcher';
 export { TodoParser, TodoItem, TodoList, ParseResult } from './todoParser';
-export { TodoManager, TodoChangeEvent, TodoStats } from './todoManager';
+export { TodoManager, TodoChangeEvent, TodoStats } from './todoManagerWithHooks';
 export { TodoTreeProvider, registerTodoCommands } from './todoTreeProvider';
 export { TodoStatusBar } from './todoStatusBar';
 export { SessionHistoryManager, SessionInfo } from './sessionHistory';

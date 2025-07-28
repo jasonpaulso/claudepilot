@@ -6,7 +6,7 @@
  */
 
 import * as vscode from 'vscode';
-import { TodoManager, TodoChangeEvent } from './todoManager';
+import { TodoManager, TodoChangeEvent } from './todoManagerWithHooks';
 import { SessionHistoryManager } from './sessionHistory';
 import { TodoItem } from './todoParser';
 import { SettingsManager } from '../utils/settingsManager';

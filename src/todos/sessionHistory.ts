@@ -6,7 +6,7 @@
  */
 
 import * as vscode from 'vscode';
-import { TodoManager } from './todoManager';
+import { TodoManager } from './todoManagerWithHooks';
 
 export interface SessionInfo {
     id: string;

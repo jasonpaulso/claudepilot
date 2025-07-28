@@ -6,7 +6,7 @@
  */
 
 import * as vscode from 'vscode';
-import { TodoManager, TodoStats } from './todoManager';
+import { TodoManager, TodoStats } from './todoManagerWithHooks';
 import { SettingsManager } from '../utils/settingsManager';
 
 export class TodoStatusBar {

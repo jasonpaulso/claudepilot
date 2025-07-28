@@ -340,4 +340,99 @@ export class TodoManager extends EventEmitter {
         
         return stats;
     }
+
+    /**
+     * Refresh todos by re-parsing all files
+     */
+    public async refresh(): Promise<void> {
+        console.log('TodoManager: Refreshing todos');
+        
+        // Clear cache
+        this.todoCache.clear();
+        
+        // Reload all todos
+        await this.loadExistingTodos();
+    }
+    
+    /**
+     * Get current session ID
+     */
+    public getCurrentSessionId(): string | undefined {
+        return this.currentSessionId;
+    }
+    
+    /**
+     * Export todos as Markdown
+     */
+    public exportAsMarkdown(): string {
+        const todos = this.getCurrentTodos();
+        const lines: string[] = ['# Claude Pilot Todos', ''];
+        
+        for (const todoList of todos) {
+            lines.push(`## Session: ${todoList.sessionId}`, '');
+            
+            // Group by status
+            const byStatus = {
+                pending: [] as typeof todoList.todos,
+                in_progress: [] as typeof todoList.todos,
+                completed: [] as typeof todoList.todos
+            };
+            
+            for (const todo of todoList.todos) {
+                byStatus[todo.status].push(todo);
+            }
+            
+            // Pending
+            if (byStatus.pending.length > 0) {
+                lines.push('### Pending', '');
+                for (const todo of byStatus.pending) {
+                    const priority = todo.priority === 'high' ? ' ⚠️' : '';
+                    lines.push(`- [ ] ${todo.content}${priority}`);
+                }
+                lines.push('');
+            }
+            
+            // In Progress
+            if (byStatus.in_progress.length > 0) {
+                lines.push('### In Progress', '');
+                for (const todo of byStatus.in_progress) {
+                    const priority = todo.priority === 'high' ? ' ⚠️' : '';
+                    lines.push(`- [~] ${todo.content}${priority}`);
+                }
+                lines.push('');
+            }
+            
+            // Completed
+            if (byStatus.completed.length > 0) {
+                lines.push('### Completed', '');
+                for (const todo of byStatus.completed) {
+                    lines.push(`- [x] ${todo.content}`);
+                }
+                lines.push('');
+            }
+        }
+        
+        return lines.join('\n');
+    }
+    
+    /**
+     * Export todos as plain text
+     */
+    public exportAsPlainText(): string {
+        const todos = this.getCurrentTodos();
+        const lines: string[] = ['Claude Pilot Todos', '==================', ''];
+        
+        for (const todoList of todos) {
+            lines.push(`Session: ${todoList.sessionId}`, '-'.repeat(40), '');
+            
+            for (const todo of todoList.todos) {
+                const status = todo.status.replace('_', ' ').toUpperCase();
+                const priority = todo.priority.toUpperCase();
+                lines.push(`[${status}] [${priority}] ${todo.content}`);
+            }
+            lines.push('');
+        }
+        
+        return lines.join('\n');
+    }
 }
