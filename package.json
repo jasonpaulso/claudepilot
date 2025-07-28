@@ -238,6 +238,12 @@
         "title": "Show Output Channel",
         "category": "Claude Pilot",
         "icon": "$(output)"
+      },
+      {
+        "command": "claudePilot.generateCommitMessage",
+        "title": "Generate Commit Message with Claude",
+        "category": "Claude Pilot",
+        "icon": "$(robot)"
       }
     ],
     "submenus": [
@@ -387,6 +393,13 @@
         {
           "command": "claudePilot.explainTerminalCommand",
           "group": "1_modification"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "claudePilot.generateCommitMessage",
+          "when": "scmProvider == git",
+          "group": "navigation"
         }
       ]
     },

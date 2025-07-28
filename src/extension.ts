@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { ClaudeCodeProvider } from "./claudeCodeProvider";
 import { TodoManager, TodoTreeProvider, registerTodoCommands, TodoStatusBar } from "./todos";
 import { registerSettingsCommands } from "./commands/settingsCommands";
+import { registerScmCommands } from "./commands/scmCommands";
 import { OutputChannelManager } from "./utils/outputChannel";
 
 export function activate(context: vscode.ExtensionContext) {
@@ -33,6 +34,9 @@ export function activate(context: vscode.ExtensionContext) {
   
   // Register settings commands
   registerSettingsCommands(context);
+  
+  // Register SCM commands
+  registerScmCommands(context, provider);
   
   // Create and register the todo status bar
   const todoStatusBar = new TodoStatusBar(todoManager);

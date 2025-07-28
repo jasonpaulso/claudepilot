@@ -1,0 +1,516 @@
+Error: Command failed: claude -p "Generate a commit message for the following staged changes. 
+The commit message should follow conventional commit format (feat:, fix:, chore:, etc.) 
+and be concise but descriptive. Output ONLY the commit message, nothing else.
+
+Staged files:
+.indexing-progress/jasonschulz_claude_projects.json
+package.json
+src/commands/scmCommands.ts
+src/extension.ts
+
+Diff:
+```diff
+diff --git a/.indexing-progress/jasonschulz_claude_projects.json b/.indexing-progress/jasonschulz_claude_projects.json
+index f4e20eb..cc6ba0d 100644
+--- a/.indexing-progress/jasonschulz_claude_projects.json
++++ b/.indexing-progress/jasonschulz_claude_projects.json
+@@ -2809,8 +2809,17 @@
+       \"status\": \"completed\",
+       \"lastModified\": \"2025-07-28T12:44:37.147Z\",
+       \"lastProcessed\": \"2025-07-28T12:44:37.854Z\"
++    },
++    \"/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/ed003ab2-031c-4820-ad89-a81d7baf680e.jsonl\": {
++      \"filePath\": \"/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/ed003ab2-031c-4820-ad89-a81d7baf680e.jsonl\",
++      \"totalLines\": 85,
++      \"processedLines\": 45,
++      \"lastProcessedLine\": 84,
++      \"status\": \"completed\",
++      \"lastModified\": \"2025-07-28T13:00:36.144Z\",
++      \"lastProcessed\": \"2025-07-28T13:00:38.817Z\"
+     }
+   },
+   \"startedAt\": \"2025-07-27T15:06:44.309Z\",
+-  \"lastUpdated\": \"2025-07-28T12:51:08.135Z\"
++  \"lastUpdated\": \"2025-07-28T13:01:48.235Z\"
+ }
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index c114607..02ed746 100644
+--- a/package.json
++++ b/package.json
+@@ -238,6 +238,12 @@
+         \"title\": \"Show Output Channel\",
+         \"category\": \"Claude Pilot\",
+         \"icon\": \"$(output)\"
++      },
++      {
++        \"command\": \"claudePilot.generateCommitMessage\",
++        \"title\": \"Generate Commit Message with Claude\",
++        \"category\": \"Claude Pilot\",
++        \"icon\": \"$(robot)\"
+       }
+     ],
+     \"submenus\": [
+@@ -388,6 +394,13 @@
+           \"command\": \"claudePilot.explainTerminalCommand\",
+           \"group\": \"1_modification\"
+         }
++      ],
++      \"scm/title\": [
++        {
++          \"command\": \"claudePilot.generateCommitMessage\",
++          \"when\": \"scmProvider == git\",
++          \"group\": \"navigation\"
++        }
+       ]
+     },
+     \"keybindings\": [
+diff --git a/src/commands/scmCommands.ts b/src/commands/scmCommands.ts
+new file mode 100644
+index 0000000..094fb75
+--- /dev/null
++++ b/src/commands/scmCommands.ts
+@@ -0,0 +1,127 @@
++import * as vscode from \"vscode\";
++import { ClaudeCodeProvider } from \"../claudeCodeProvider\";
++import { exec } from \"child_process\";
++import { promisify } from \"util\";
++
++const execAsync = promisify(exec);
++
++export async function registerScmCommands(
++  context: vscode.ExtensionContext,
++  provider: ClaudeCodeProvider
++) {
++  context.subscriptions.push(
++    vscode.commands.registerCommand(\"claudePilot.generateCommitMessage\", async () => {
++      await generateCommitMessage(provider);
++    })
++  );
++}
++
++async function generateCommitMessage(provider: ClaudeCodeProvider) {
++  try {
++    // Check if we have a workspace
++    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
++    if (!workspaceFolder) {
++      vscode.window.showErrorMessage(\"No workspace folder found\");
++      return;
++    }
++
++    // Check if there are staged changes
++    const gitStatusResult = await execAsync(\"git status --porcelain\", {
++      cwd: workspaceFolder.uri.fsPath
++    });
++
++    const stagedFiles = gitStatusResult.stdout
++      .split(\"\n\")
++      .filter(line => line.match(/^[MARCD]/))
++      .map(line => line.substring(3).trim());
++
++    if (stagedFiles.length === 0) {
++      vscode.window.showWarningMessage(\"No staged changes found. Please stage your changes first.\");
++      return;
++    }
++
++    // Get the diff of staged changes
++    const gitDiffResult = await execAsync(\"git diff --cached\", {
++      cwd: workspaceFolder.uri.fsPath
++    });
++
++    const stagedDiff = gitDiffResult.stdout;
++
++    // Create a temporary file to write the Claude response
++    const tempFile = await vscode.workspace.fs.writeFile(
++      vscode.Uri.joinPath(workspaceFolder.uri, \".claude-commit-msg\"),
++      Buffer.from(\"\")
++    );
++
++    // Prepare the prompt for Claude
++    const prompt = `Generate a commit message for the following staged changes. 
++The commit message should follow conventional commit format (feat:, fix:, chore:, etc.) 
++and be concise but descriptive. Output ONLY the commit message, nothing else.
++
++Staged files:
++${stagedFiles.join(\"\n\")}
++
++Diff:
++\`\`\`diff
++${stagedDiff}
++\`\`\``;
++
++    // Run Claude in non-interactive mode to generate the commit message
++    vscode.window.withProgress({
++      location: vscode.ProgressLocation.Notification,
++      title: \"Generating commit message with Claude...\",
++      cancellable: false
++    }, async () => {
++      try {
++        const claudeCommand = `claude -p \"${prompt.replace(/\"/g, '\\\"')}\" > .claude-commit-msg 2>&1`;
++        
++        await execAsync(claudeCommand, {
++          cwd: workspaceFolder.uri.fsPath
++        });
++
++        // Read the generated commit message
++        const commitMsgUri = vscode.Uri.joinPath(workspaceFolder.uri, \".claude-commit-msg\");
++        const commitMsgBytes = await vscode.workspace.fs.readFile(commitMsgUri);
++        let commitMsg = Buffer.from(commitMsgBytes).toString(\"utf8\").trim();
++
++        // Clean up the commit message (remove any potential explanations)
++        const lines = commitMsg.split(\"\n\");
++        const firstNonEmptyLine = lines.find(line => line.trim().length > 0);
++        if (firstNonEmptyLine) {
++          commitMsg = firstNonEmptyLine.trim();
++        }
++
++        // Clean up temp file
++        await vscode.workspace.fs.delete(commitMsgUri);
++
++        if (commitMsg) {
++          // Get the SCM input box
++          const gitExtension = vscode.extensions.getExtension(\"vscode.git\");
++          if (gitExtension) {
++            const git = gitExtension.exports.getAPI(1);
++            const repositories = git.repositories;
++            
++            if (repositories.length > 0) {
++              const repository = repositories[0];
++              repository.inputBox.value = commitMsg;
++              
++              // Focus on the SCM view
++              await vscode.commands.executeCommand(\"workbench.view.scm\");
++              
++              vscode.window.showInformationMessage(\"Commit message generated successfully!\");
++            }
++          }
++        } else {
++          vscode.window.showErrorMessage(\"Failed to generate commit message\");
++        }
++      } catch (error) {
++        console.error(\"Error generating commit message:\", error);
++        vscode.window.showErrorMessage(`Failed to generate commit message: ${error}`);
++      }
++    });
++
++  } catch (error) {
++    console.error(\"Error in generateCommitMessage:\", error);
++    vscode.window.showErrorMessage(`Error: ${error}`);
++  }
++}
+\ No newline at end of file
+diff --git a/src/extension.ts b/src/extension.ts
+index 715cce6..04d947a 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -2,6 +2,7 @@ import * as vscode from \"vscode\";
+ import { ClaudeCodeProvider } from \"./claudeCodeProvider\";
+ import { TodoManager, TodoTreeProvider, registerTodoCommands, TodoStatusBar } from \"./todos\";
+ import { registerSettingsCommands } from \"./commands/settingsCommands\";
++import { registerScmCommands } from \"./commands/scmCommands\";
+ import { OutputChannelManager } from \"./utils/outputChannel\";
+ 
+ export function activate(context: vscode.ExtensionContext) {
+@@ -34,6 +35,9 @@ export function activate(context: vscode.ExtensionContext) {
+   // Register settings commands
+   registerSettingsCommands(context);
+   
++  // Register SCM commands
++  registerScmCommands(context, provider);
++  
+   // Create and register the todo status bar
+   const todoStatusBar = new TodoStatusBar(todoManager);
+   context.subscriptions.push({
+
+```" > .claude-commit-msg 2>&1
+usage: diff [-aBbdilpTtw] [-c | -e | -f | -n | -q | -u] [--ignore-case]
+            [--no-ignore-case] [--normal] [--strip-trailing-cr] [--tabsize]
+            [-I pattern] [-F pattern] [-L label] file1 file2
+       diff [-aBbdilpTtw] [-I pattern] [-L label] [--ignore-case]
+            [--no-ignore-case] [--normal] [--strip-trailing-cr] [--tabsize]
+            [-F pattern] -C number file1 file2
+       diff [-aBbdiltw] [-I pattern] [--ignore-case] [--no-ignore-case]
+            [--normal] [--strip-trailing-cr] [--tabsize] -D string file1 file2
+       diff [-aBbdilpTtw] [-I pattern] [-L label] [--ignore-case]
+            [--no-ignore-case] [--normal] [--tabsize] [--strip-trailing-cr]
+            [-F pattern] -U number file1 file2
+       diff [-aBbdilNPprsTtw] [-c | -e | -f | -n | -q | -u] [--ignore-case]
+            [--no-ignore-case] [--normal] [--tabsize] [-I pattern] [-L label]
+            [-F pattern] [-S name] [-X file] [-x pattern] dir1 dir2
+       diff [-aBbditwW] [--expand-tabs] [--ignore-all-blanks]
+            [--ignore-blank-lines] [--ignore-case] [--minimal]
+            [--no-ignore-file-name-case] [--strip-trailing-cr]
+            [--suppress-common-lines] [--tabsize] [--text] [--width]
+            -y | --side-by-side file1 file2
+       diff [--help] [--version]
+diff: unrecognized option `--git'
+usage: diff [-aBbdilpTtw] [-c | -e | -f | -n | -q | -u] [--ignore-case]
+            [--no-ignore-case] [--normal] [--strip-trailing-cr] [--tabsize]
+            [-I pattern] [-F pattern] [-L label] file1 file2
+       diff [-aBbdilpTtw] [-I pattern] [-L label] [--ignore-case]
+            [--no-ignore-case] [--normal] [--strip-trailing-cr] [--tabsize]
+            [-F pattern] -C number file1 file2
+       diff [-aBbdiltw] [-I pattern] [--ignore-case] [--no-ignore-case]
+            [--normal] [--strip-trailing-cr] [--tabsize] -D string file1 file2
+       diff [-aBbdilpTtw] [-I pattern] [-L label] [--ignore-case]
+            [--no-ignore-case] [--normal] [--tabsize] [--strip-trailing-cr]
+            [-F pattern] -U number file1 file2
+       diff [-aBbdilNPprsTtw] [-c | -e | -f | -n | -q | -u] [--ignore-case]
+            [--no-ignore-case] [--normal] [--tabsize] [-I pattern] [-L label]
+            [-F pattern] [-S name] [-X file] [-x pattern] dir1 dir2
+       diff [-aBbditwW] [--expand-tabs] [--ignore-all-blanks]
+            [--ignore-blank-lines] [--ignore-case] [--minimal]
+            [--no-ignore-file-name-case] [--strip-trailing-cr]
+            [--suppress-common-lines] [--tabsize] [--text] [--width]
+            -y | --side-by-side file1 file2
+       diff [--help] [--version]
+/bin/sh: line 2: index: command not found
+/bin/sh: line 3: ---: command not found
+/bin/sh: line 4: +++: command not found
+/bin/sh: line 5: @@: command not found
+/bin/sh: line 6: status:: command not found
+/bin/sh: line 7: lastModified:: command not found
+/bin/sh: line 8: lastProcessed:: command not found
+/bin/sh: line 9: +: command not found
+/bin/sh: line 10: +: command not found
+/bin/sh: line 11: +: command not found
+/bin/sh: line 12: +: command not found
+/bin/sh: line 13: +: command not found
+/bin/sh: line 14: +: command not found
+/bin/sh: line 15: +: command not found
+/bin/sh: line 16: +: command not found
+/bin/sh: line 17: +: command not found
+/bin/sh: command substitution: line 18: syntax error near unexpected token `}'
+/bin/sh: command substitution: line 18: `     }'
+/bin/sh: Generate a commit message for the following staged changes. 
+The commit message should follow conventional commit format (feat:, fix:, chore:, etc.) 
+and be concise but descriptive. Output ONLY the commit message, nothing else.
+
+Staged files:
+.indexing-progress/jasonschulz_claude_projects.json
+package.json
+src/commands/scmCommands.ts
+src/extension.ts
+
+Diff:
+```diff
+diff --git a/.indexing-progress/jasonschulz_claude_projects.json b/.indexing-progress/jasonschulz_claude_projects.json
+index f4e20eb..cc6ba0d 100644
+--- a/.indexing-progress/jasonschulz_claude_projects.json
++++ b/.indexing-progress/jasonschulz_claude_projects.json
+@@ -2809,8 +2809,17 @@
+       "status": "completed",
+       "lastModified": "2025-07-28T12:44:37.147Z",
+       "lastProcessed": "2025-07-28T12:44:37.854Z"
++    },
++    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/ed003ab2-031c-4820-ad89-a81d7baf680e.jsonl": {
++      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/ed003ab2-031c-4820-ad89-a81d7baf680e.jsonl",
++      "totalLines": 85,
++      "processedLines": 45,
++      "lastProcessedLine": 84,
++      "status": "completed",
++      "lastModified": "2025-07-28T13:00:36.144Z",
++      "lastProcessed": "2025-07-28T13:00:38.817Z"
+     }
+   },
+   "startedAt": "2025-07-27T15:06:44.309Z",
+-  "lastUpdated": "2025-07-28T12:51:08.135Z"
++  "lastUpdated": "2025-07-28T13:01:48.235Z"
+ }
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index c114607..02ed746 100644
+--- a/package.json
++++ b/package.json
+@@ -238,6 +238,12 @@
+         "title": "Show Output Channel",
+         "category": "Claude Pilot",
+         "icon": "$(output)"
++      },
++      {
++        "command": "claudePilot.generateCommitMessage",
++        "title": "Generate Commit Message with Claude",
++        "category": "Claude Pilot",
++        "icon": "$(robot)"
+       }
+     ],
+     "submenus": [
+@@ -388,6 +394,13 @@
+           "command": "claudePilot.explainTerminalCommand",
+           "group": "1_modification"
+         }
++      ],
++      "scm/title": [
++        {
++          "command": "claudePilot.generateCommitMessage",
++          "when": "scmProvider == git",
++          "group": "navigation"
++        }
+       ]
+     },
+     "keybindings": [
+diff --git a/src/commands/scmCommands.ts b/src/commands/scmCommands.ts
+new file mode 100644
+index 0000000..094fb75
+--- /dev/null
++++ b/src/commands/scmCommands.ts
+@@ -0,0 +1,127 @@
++import * as vscode from "vscode";
++import { ClaudeCodeProvider } from "../claudeCodeProvider";
++import { exec } from "child_process";
++import { promisify } from "util";
++
++const execAsync = promisify(exec);
++
++export async function registerScmCommands(
++  context: vscode.ExtensionContext,
++  provider: ClaudeCodeProvider
++) {
++  context.subscriptions.push(
++    vscode.commands.registerCommand("claudePilot.generateCommitMessage", async () => {
++      await generateCommitMessage(provider);
++    })
++  );
++}
++
++async function generateCommitMessage(provider: ClaudeCodeProvider) {
++  try {
++    // Check if we have a workspace
++    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
++    if (!workspaceFolder) {
++      vscode.window.showErrorMessage("No workspace folder found");
++      return;
++    }
++
++    // Check if there are staged changes
++    const gitStatusResult = await execAsync("git status --porcelain", {
++      cwd: workspaceFolder.uri.fsPath
++    });
++
++    const stagedFiles = gitStatusResult.stdout
++      .split("\n")
++      .filter(line => line.match(/^[MARCD]/))
++      .map(line => line.substring(3).trim());
++
++    if (stagedFiles.length === 0) {
++      vscode.window.showWarningMessage("No staged changes found. Please stage your changes first.");
++      return;
++    }
++
++    // Get the diff of staged changes
++    const gitDiffResult = await execAsync("git diff --cached", {
++      cwd: workspaceFolder.uri.fsPath
++    });
++
++    const stagedDiff = gitDiffResult.stdout;
++
++    // Create a temporary file to write the Claude response
++    const tempFile = await vscode.workspace.fs.writeFile(
++      vscode.Uri.joinPath(workspaceFolder.uri, ".claude-commit-msg"),
++      Buffer.from("")
++    );
++
++    // Prepare the prompt for Claude
++    const prompt = `Generate a commit message for the following staged changes. 
++The commit message should follow conventional commit format (feat:, fix:, chore:, etc.) 
++and be concise but descriptive. Output ONLY the commit message, nothing else.
++
++Staged files:
++${stagedFiles.join(\"\n\")}
++
++Diff:
++\`\`\`diff
++${stagedDiff}
++\`\`\``;
++
++    // Run Claude in non-interactive mode to generate the commit message
++    vscode.window.withProgress({
++      location: vscode.ProgressLocation.Notification,
++      title: "Generating commit message with Claude...",
++      cancellable: false
++    }, async () => {
++      try {
++        const claudeCommand = `claude -p "${prompt.replace(/\"/g, '\\\"')}" > .claude-commit-msg 2>&1`;
++        
++        await execAsync(claudeCommand, {
++          cwd: workspaceFolder.uri.fsPath
++        });
++
++        // Read the generated commit message
++        const commitMsgUri = vscode.Uri.joinPath(workspaceFolder.uri, ".claude-commit-msg");
++        const commitMsgBytes = await vscode.workspace.fs.readFile(commitMsgUri);
++        let commitMsg = Buffer.from(commitMsgBytes).toString("utf8").trim();
++
++        // Clean up the commit message (remove any potential explanations)
++        const lines = commitMsg.split("\n");
++        const firstNonEmptyLine = lines.find(line => line.trim().length > 0);
++        if (firstNonEmptyLine) {
++          commitMsg = firstNonEmptyLine.trim();
++        }
++
++        // Clean up temp file
++        await vscode.workspace.fs.delete(commitMsgUri);
++
++        if (commitMsg) {
++          // Get the SCM input box
++          const gitExtension = vscode.extensions.getExtension("vscode.git");
++          if (gitExtension) {
++            const git = gitExtension.exports.getAPI(1);
++            const repositories = git.repositories;
++            
++            if (repositories.length > 0) {
++              const repository = repositories[0];
++              repository.inputBox.value = commitMsg;
++              
++              // Focus on the SCM view
++              await vscode.commands.executeCommand("workbench.view.scm");
++              
++              vscode.window.showInformationMessage("Commit message generated successfully!");
++            }
++          }
++        } else {
++          vscode.window.showErrorMessage("Failed to generate commit message");
++        }
++      } catch (error) {
++        console.error("Error generating commit message:", error);
++        vscode.window.showErrorMessage(`Failed to generate commit message: ${error}`);
++      }
++    });
++
++  } catch (error) {
++    console.error("Error in generateCommitMessage:", error);
++    vscode.window.showErrorMessage(`Error: ${error}`);
++  }
++}
+\ No newline at end of file
+diff --git a/src/extension.ts b/src/extension.ts
+index 715cce6..04d947a 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -2,6 +2,7 @@ import * as vscode from "vscode";
+ import { ClaudeCodeProvider } from "./claudeCodeProvider";
+ import { TodoManager, TodoTreeProvider, registerTodoCommands, TodoStatusBar } from "./todos";
+ import { registerSettingsCommands } from "./commands/settingsCommands";
++import { registerScmCommands } from "./commands/scmCommands";
+ import { OutputChannelManager } from "./utils/outputChannel";
+ 
+ export function activate(context: vscode.ExtensionContext) {
+@@ -34,6 +35,9 @@ export function activate(context: vscode.ExtensionContext) {
+   // Register settings commands
+   registerSettingsCommands(context);
+   
++  // Register SCM commands
++  registerScmCommands(context, provider);
++  
+   // Create and register the todo status bar
+   const todoStatusBar = new TodoStatusBar(todoManager);
+   context.subscriptions.push({
+
+```: bad substitution
+
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at ChildProcess.exithandler (node:child_process:415:12)
+    at ChildProcess.emit (node:events:518:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at Process.ChildProcess._handle.onexit (node:internal/child_process:304:5)
