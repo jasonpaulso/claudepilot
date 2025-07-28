@@ -2764,8 +2764,17 @@
       "status": "completed",
       "lastModified": "2025-07-28T00:50:27.182Z",
       "lastProcessed": "2025-07-28T00:50:31.063Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/22865354-ce1f-48ec-bde0-794f86b4754a.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/22865354-ce1f-48ec-bde0-794f86b4754a.jsonl",
+      "totalLines": 4,
+      "processedLines": 1,
+      "lastProcessedLine": 0,
+      "status": "completed",
+      "lastModified": "2025-07-28T11:28:15.538Z",
+      "lastProcessed": "2025-07-28T11:28:15.801Z"
     }
   },
   "startedAt": "2025-07-27T15:06:44.309Z",
-  "lastUpdated": "2025-07-28T00:50:41.608Z"
+  "lastUpdated": "2025-07-28T11:32:17.420Z"
 }

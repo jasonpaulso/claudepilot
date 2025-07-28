@@ -4,8 +4,8 @@
  * Extends the startup menu with session browsing capability
  */
 
-import { SessionReader, SessionSummary } from "./sessionReader";
-import { StartupMenu } from "./startupMenu";
+import { SessionReader, SessionSummary } from "./sessionReader"
+import { StartupMenu } from "./startupMenu"
 
 export class EnhancedStartupMenu extends StartupMenu {
   /**
@@ -415,7 +415,7 @@ export class EnhancedStartupMenu extends StartupMenu {
                         const select = option.querySelector('.flag-select');
                         
                         // Skip session-id if already in command
-                        if (flag === '--resume-id' && selectedSessionId) {
+                        if (flag === '--session-id' && selectedSessionId) {
                             return;
                         }
                         

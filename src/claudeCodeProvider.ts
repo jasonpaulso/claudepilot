@@ -347,11 +347,11 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
       // Insert session ID after "claude" but before any other flags
       if (hasFlag) {
         // Reconstruct command with session ID inserted
-        finalCommand = `claude --resume ${sessionId} ${commandParts
+        finalCommand = `claude --session-id ${sessionId} ${commandParts
           .slice(1)
           .join(" ")}`;
       } else {
-        finalCommand = `claude --resume ${sessionId}`;
+        finalCommand = `claude --session-id ${sessionId}`;
       }
 
       // Save the session
@@ -384,9 +384,9 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
       }
     }
     // Check if this is a resume command with a specific session ID
-    else if (selectedCommand.includes("--resume ")) {
+    else if (selectedCommand.includes("--session-id ")) {
       // Extract session ID from command
-      const sessionIdMatch = selectedCommand.match(/--resume ([a-f0-9-]+)/);
+      const sessionIdMatch = selectedCommand.match(/--session-id ([a-f0-9-]+)/);
       if (sessionIdMatch) {
         this._currentSessionId = sessionIdMatch[1];
         // Save as last session
