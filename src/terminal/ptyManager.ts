@@ -35,6 +35,7 @@
 
 import * as vscode from 'vscode';
 import * as pty from '@lydell/node-pty';
+import { OutputChannelManager } from '../utils/outputChannel';
 
 export class PtyManager {
     private _ptyProcess?: pty.IPty;
@@ -43,9 +44,11 @@ export class PtyManager {
     private _readyTimer?: NodeJS.Timeout;
     private _onDataCallback?: (data: string) => void;
     private _startingCommand?: string;
+    private _outputChannel: OutputChannelManager;
 
     constructor(onDataCallback?: (data: string) => void) {
         this._onDataCallback = onDataCallback;
+        this._outputChannel = OutputChannelManager.getInstance();
     }
 
     public start(startingCommand?: string): void {
@@ -83,6 +86,9 @@ export class PtyManager {
             this._ptyProcess.onData((data) => {
                 this._onDataCallback?.(data);
                 
+                // Send PTY data to output channel
+                this._outputChannel.appendPtyData(data);
+                
                 // Track when data was last received
                 this._lastDataTime = Date.now();
                 
@@ -94,6 +100,7 @@ export class PtyManager {
             
             this._ptyProcess.onExit(() => {
                 console.log('PTY process exited');
+                this._outputChannel.logDebug('PTY process exited');
             });
         }
     }
@@ -104,6 +111,8 @@ export class PtyManager {
 
     public write(data: string): void {
         this._ptyProcess?.write(data);
+        // Log user input to output channel (with [INPUT] prefix)
+        this._outputChannel.appendLine(`[INPUT] ${data.trim()}`);
     }
 
     public resize(cols: number, rows: number): void {

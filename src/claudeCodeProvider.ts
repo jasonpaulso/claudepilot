@@ -5,6 +5,7 @@ import { TodoManager } from "./todos/todoManager";
 import { SessionReader } from "./utils/sessionReader";
 import { TemplateUtils } from "./utils/templateUtils";
 import { SettingsManager } from "./utils/settingsManager";
+import { OutputChannelManager } from "./utils/outputChannel";
 
 export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "claudePilotView";
@@ -21,6 +22,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
   private _sessionManager: SessionManager;
   private _settingsManager: SettingsManager;
   public todoManager?: TodoManager;
+  private _outputChannel: OutputChannelManager;
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
@@ -29,6 +31,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
     ClaudeCodeProvider._instance = this;
     this._sessionManager = new SessionManager(this._context);
     this._settingsManager = new SettingsManager();
+    this._outputChannel = OutputChannelManager.getInstance();
   }
 
   public static getInstance(): ClaudeCodeProvider | undefined {
@@ -173,10 +176,16 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
       }
 
       // Clear session ID and stop todo tracking
+      if (this._currentSessionId) {
+        this._outputChannel.logSessionEnd(this._currentSessionId);
+      }
       this._currentSessionId = undefined;
       if (this.todoManager) {
         this.todoManager.stopSession();
       }
+      
+      // Log reinitialize
+      this._outputChannel.logDebug('Extension reinitialized');
 
       // Re-resolve the webview to show the startup menu again
       const timeNow = new Date().getTime();
@@ -506,12 +515,17 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         this._currentSessionId = sessionId;
         console.log("Claude session ID detected:", sessionId);
         
+        // Log session start to output channel
+        this._outputChannel.logSessionStart(sessionId);
+        
         // Start todo tracking for detected session
         if (this.todoManager) {
           this.todoManager.startSession(sessionId).then(() => {
             console.log(`Started todo tracking for detected session: ${sessionId}`);
+            this._outputChannel.logDebug(`Todo tracking started for session: ${sessionId}`);
           }).catch(err => {
             console.error(`Failed to start todo tracking: ${err}`);
+            this._outputChannel.logError(`Failed to start todo tracking: ${err}`);
           });
         }
       }

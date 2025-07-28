@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { ClaudeCodeProvider } from "./claudeCodeProvider";
 import { TodoManager, TodoTreeProvider, registerTodoCommands, TodoStatusBar } from "./todos";
 import { registerSettingsCommands } from "./commands/settingsCommands";
+import { OutputChannelManager } from "./utils/outputChannel";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Claude Pilot extension is now active!");
@@ -139,6 +140,10 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.commands.registerCommand("claudePilot.explainTerminalCommand", async () => {
       await handleTerminalAction(provider, 'explain');
+    }),
+    vscode.commands.registerCommand("claudePilot.showOutputChannel", () => {
+      const outputChannel = OutputChannelManager.getInstance();
+      outputChannel.show();
     })
   );
 }

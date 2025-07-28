@@ -232,6 +232,12 @@
         "command": "claudePilot.showSettingsSummary",
         "title": "Show Settings Summary",
         "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.showOutputChannel",
+        "title": "Show Output Channel",
+        "category": "Claude Pilot",
+        "icon": "$(output)"
       }
     ],
     "submenus": [
@@ -253,9 +259,14 @@
           "group": "navigation@2"
         },
         {
+          "command": "claudePilot.showOutputChannel",
+          "when": "view == claudePilotView",
+          "group": "navigation@3"
+        },
+        {
           "command": "claudePilot.refresh",
           "when": "view == claudePilot",
-          "group": "navigation@3"
+          "group": "navigation@4"
         },
         {
           "command": "claudePilot.refreshTodos",
@@ -504,6 +515,38 @@
           "type": "boolean",
           "default": false,
           "description": "Enable experimental features (may be unstable)"
+        },
+        "claudePilot.outputChannel.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable output channel logging for PTY data"
+        },
+        "claudePilot.outputChannel.showOnStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically show output channel when extension activates"
+        },
+        "claudePilot.outputChannel.stripAnsiCodes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remove ANSI escape codes from PTY output for cleaner logs"
+        },
+        "claudePilot.outputChannel.logLevel": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "info",
+            "debug"
+          ],
+          "default": "info",
+          "description": "Logging level for output channel",
+          "enumDescriptions": [
+            "Only log errors",
+            "Log errors and warnings",
+            "Log errors, warnings, and info messages",
+            "Log everything including debug messages"
+          ]
         }
       }
     }
