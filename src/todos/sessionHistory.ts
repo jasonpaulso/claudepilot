@@ -32,10 +32,17 @@ export class SessionHistoryManager {
      * Get session history
      */
     public getSessionHistory(): SessionInfo[] {
-        return this.context.globalState.get<SessionInfo[]>(
+        const history = this.context.globalState.get<any[]>(
             SessionHistoryManager.STORAGE_KEY,
             []
         );
+        
+        // Convert date strings back to Date objects
+        return history.map(session => ({
+            ...session,
+            startTime: new Date(session.startTime),
+            lastActiveTime: new Date(session.lastActiveTime)
+        }));
     }
     
     /**
@@ -49,7 +56,7 @@ export class SessionHistoryManager {
         
         const sessionInfo: SessionInfo = {
             id: sessionId,
-            startTime: existingIndex >= 0 ? history[existingIndex].startTime : new Date(),
+            startTime: existingIndex >= 0 ? new Date(history[existingIndex].startTime) : new Date(),
             lastActiveTime: new Date(),
             todoCount: stats.total,
             completedCount: stats.completed
@@ -124,28 +131,39 @@ export class SessionHistoryManager {
      * Get human-readable time ago string
      */
     private getTimeAgo(date: Date): string {
-        const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-        
-        if (seconds < 60) {
-            return 'just now';
+        try {
+            // Ensure date is a valid Date object
+            const dateObj = date instanceof Date ? date : new Date(date);
+            if (isNaN(dateObj.getTime())) {
+                return 'unknown';
+            }
+            
+            const seconds = Math.floor((new Date().getTime() - dateObj.getTime()) / 1000);
+            
+            if (seconds < 60) {
+                return 'just now';
+            }
+            
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) {
+                return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            }
+            
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) {
+                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            }
+            
+            const days = Math.floor(hours / 24);
+            if (days < 7) {
+                return `${days} day${days > 1 ? 's' : ''} ago`;
+            }
+            
+            const weeks = Math.floor(days / 7);
+            return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+        } catch (error) {
+            console.error('Error calculating time ago:', error);
+            return 'unknown';
         }
-        
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) {
-            return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-        }
-        
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) {
-            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-        }
-        
-        const days = Math.floor(hours / 24);
-        if (days < 7) {
-            return `${days} day${days > 1 ? 's' : ''} ago`;
-        }
-        
-        const weeks = Math.floor(days / 7);
-        return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
     }
 }

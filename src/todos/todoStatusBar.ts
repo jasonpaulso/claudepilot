@@ -7,14 +7,17 @@
 
 import * as vscode from 'vscode';
 import { TodoManager, TodoStats } from './todoManager';
+import { SettingsManager } from '../utils/settingsManager';
 
 export class TodoStatusBar {
     private statusBarItem: vscode.StatusBarItem;
     private todoManager: TodoManager;
+    private settingsManager: SettingsManager;
     private updateDebounceTimer?: NodeJS.Timeout;
     
     constructor(todoManager: TodoManager) {
         this.todoManager = todoManager;
+        this.settingsManager = new SettingsManager();
         
         // Create status bar item with high priority
         this.statusBarItem = vscode.window.createStatusBarItem(
@@ -32,12 +35,24 @@ export class TodoStatusBar {
         this.todoManager.on('todoChanged', () => {
             this.debouncedUpdate();
         });
+        
+        // Listen for settings changes
+        this.settingsManager.onSettingsChanged(() => {
+            this.update();
+        });
     }
     
     /**
      * Update the status bar with current todo stats
      */
     private update(): void {
+        // Check if status bar should be shown based on settings
+        const settings = this.settingsManager.getTodoSettings();
+        if (!settings.showStatusBar) {
+            this.statusBarItem.hide();
+            return;
+        }
+        
         const stats = this.todoManager.getTodoStats();
         
         if (stats.total === 0) {

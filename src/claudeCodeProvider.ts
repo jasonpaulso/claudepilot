@@ -4,6 +4,7 @@ import { PtyManager } from "./terminal/ptyManager";
 import { TodoManager } from "./todos/todoManager";
 import { SessionReader } from "./utils/sessionReader";
 import { TemplateUtils } from "./utils/templateUtils";
+import { SettingsManager } from "./utils/settingsManager";
 
 export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "claudePilotView";
@@ -18,6 +19,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
   >();
   private _currentSessionId?: string;
   private _sessionManager: SessionManager;
+  private _settingsManager: SettingsManager;
   public todoManager?: TodoManager;
 
   constructor(
@@ -26,6 +28,7 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
   ) {
     ClaudeCodeProvider._instance = this;
     this._sessionManager = new SessionManager(this._context);
+    this._settingsManager = new SettingsManager();
   }
 
   public static getInstance(): ClaudeCodeProvider | undefined {
@@ -76,6 +79,20 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
       // If PTY already exists, we should initialize terminal immediately
       this._view.webview.postMessage({ command: "initializeTerminal" });
       this._terminalInitialized = true;
+    }
+    
+    // Check settings to see if we should bypass the welcome screen
+    const uiSettings = this._settingsManager.getUISettings();
+    if (!uiSettings.showWelcomeScreen && !this._terminalInitialized) {
+      // Get the configured starting command
+      const startingCommand = this._settingsManager.getAllSettings().startingCommand;
+      if (startingCommand !== 'none') {
+        // Bypass menu and start with configured command
+        this._view.webview.postMessage({
+          command: "bypassMenuWithCommand",
+          selectedCommand: startingCommand
+        });
+      }
     }
 
     webviewView.webview.onDidReceiveMessage((message) => {
@@ -155,8 +172,11 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
         this._terminalInitialized = false;
       }
 
-      // Clear session ID
+      // Clear session ID and stop todo tracking
       this._currentSessionId = undefined;
+      if (this.todoManager) {
+        this.todoManager.stopSession();
+      }
 
       // Re-resolve the webview to show the startup menu again
       const timeNow = new Date().getTime();
@@ -485,6 +505,15 @@ export class ClaudeCodeProvider implements vscode.WebviewViewProvider {
       if (sessionId) {
         this._currentSessionId = sessionId;
         console.log("Claude session ID detected:", sessionId);
+        
+        // Start todo tracking for detected session
+        if (this.todoManager) {
+          this.todoManager.startSession(sessionId).then(() => {
+            console.log(`Started todo tracking for detected session: ${sessionId}`);
+          }).catch(err => {
+            console.error(`Failed to start todo tracking: ${err}`);
+          });
+        }
       }
     }
   }

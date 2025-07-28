@@ -42,7 +42,8 @@ export class WebviewTemplate {
     version: string,
     timestamp: number,
     workspacePath: string = "",
-    sessionId: string = ""
+    sessionId: string = "",
+    terminalSettings?: any
   ): string {
     const nonce = this.generateNonce();
 
@@ -81,7 +82,7 @@ export class WebviewTemplate {
     
     <!-- Main terminal script -->
     <script nonce="${nonce}">
-        ${this.getMainScript(workspacePath)}
+        ${this.getMainScript(workspacePath, terminalSettings)}
     </script>
 </body>
 </html>`;
@@ -90,7 +91,7 @@ export class WebviewTemplate {
   /**
    * Get the main terminal initialization script
    */
-  private static getMainScript(workspacePath: string): string {
+  private static getMainScript(workspacePath: string, terminalSettings?: any): string {
     return `
         (function() {
             'use strict';
@@ -119,7 +120,8 @@ export class WebviewTemplate {
             // Function to initialize terminal after menu selection
             function initializeTerminal() {
                 // Initialize terminal
-                terminal = new Terminal(${getTerminalConfig()});
+                const terminalSettings = ${JSON.stringify(terminalSettings || {})};
+                terminal = new Terminal(${getTerminalConfig(terminalSettings)});
 
                 fitAddon = new FitAddon.FitAddon();
                 webLinksAddon = new WebLinksAddon.WebLinksAddon((event, uri) => {

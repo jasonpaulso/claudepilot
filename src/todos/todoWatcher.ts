@@ -94,7 +94,7 @@ export class TodoWatcher extends EventEmitter {
      */
     private isSessionTodoFile(filename: string, sessionId: string): boolean {
         // Claude saves todo files with the session ID in the filename
-        // Pattern: todos-{sessionId}.json or similar
+        // Pattern: {sessionId}-agent-{sessionId}.json
         return filename.includes(sessionId) && filename.endsWith('.json');
     }
 

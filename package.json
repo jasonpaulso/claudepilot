@@ -191,6 +191,47 @@
         "title": "Clear Session History",
         "category": "Claude Pilot",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "claudePilot.openSettings",
+        "title": "Open Settings",
+        "category": "Claude Pilot",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "claudePilot.setTerminalFontSize",
+        "title": "Set Terminal Font Size",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.setTerminalCursorStyle",
+        "title": "Set Terminal Cursor Style",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.toggleWelcomeScreen",
+        "title": "Toggle Welcome Screen",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.toggleTodoStatusBar",
+        "title": "Toggle Todo Status Bar",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.setDefaultTodoFilter",
+        "title": "Set Default Todo Filter",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.resetSettings",
+        "title": "Reset Settings to Defaults",
+        "category": "Claude Pilot"
+      },
+      {
+        "command": "claudePilot.showSettingsSummary",
+        "title": "Show Settings Summary",
+        "category": "Claude Pilot"
       }
     ],
     "submenus": [
@@ -207,9 +248,14 @@
           "group": "navigation@1"
         },
         {
+          "command": "claudePilot.openSettings",
+          "when": "view == claudePilotView",
+          "group": "navigation@2"
+        },
+        {
           "command": "claudePilot.refresh",
           "when": "view == claudePilot",
-          "group": "navigation@2"
+          "group": "navigation@3"
         },
         {
           "command": "claudePilot.refreshTodos",
@@ -371,6 +417,93 @@
             "Load the most recent conversation in the current directory",
             "Resume a specific session by ID (interactive selection)"
           ]
+        },
+        "claudePilot.terminal.fontSize": {
+          "type": "number",
+          "default": 14,
+          "minimum": 8,
+          "maximum": 32,
+          "description": "Terminal font size in pixels"
+        },
+        "claudePilot.terminal.fontFamily": {
+          "type": "string",
+          "default": "",
+          "description": "Terminal font family (empty to use VS Code terminal font)"
+        },
+        "claudePilot.terminal.cursorStyle": {
+          "type": "string",
+          "enum": [
+            "block",
+            "underline",
+            "bar"
+          ],
+          "default": "block",
+          "description": "Terminal cursor style"
+        },
+        "claudePilot.terminal.cursorBlink": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the terminal cursor should blink"
+        },
+        "claudePilot.terminal.scrollback": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 100,
+          "maximum": 50000,
+          "description": "Maximum number of lines to keep in terminal scrollback"
+        },
+        "claudePilot.ui.showWelcomeScreen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the welcome/startup menu when opening Claude Pilot"
+        },
+        "claudePilot.ui.rememberLastSession": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remember and offer to resume the last session"
+        },
+        "claudePilot.ui.sessionHistoryLimit": {
+          "type": "number",
+          "default": 50,
+          "minimum": 10,
+          "maximum": 200,
+          "description": "Maximum number of sessions to keep in history"
+        },
+        "claudePilot.todos.defaultFilter": {
+          "type": "string",
+          "enum": [
+            "all",
+            "pending",
+            "in_progress",
+            "completed"
+          ],
+          "default": "all",
+          "description": "Default filter for todo list view"
+        },
+        "claudePilot.todos.sortBy": {
+          "type": "string",
+          "enum": [
+            "priority",
+            "status",
+            "content"
+          ],
+          "default": "priority",
+          "description": "Default sorting for todo items"
+        },
+        "claudePilot.todos.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show todo count in the status bar"
+        },
+        "claudePilot.todos.expandByDefault": {
+          "type": "boolean",
+          "default": true,
+          "description": "Expand todo categories by default in the tree view"
+        },
+        "claudePilot.experimental.enableAdvancedFeatures": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable experimental features (may be unstable)"
         }
       }
     }

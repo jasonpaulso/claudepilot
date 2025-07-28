@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { ClaudeCodeProvider } from "./claudeCodeProvider";
 import { TodoManager, TodoTreeProvider, registerTodoCommands, TodoStatusBar } from "./todos";
+import { registerSettingsCommands } from "./commands/settingsCommands";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Claude Pilot extension is now active!");
@@ -29,6 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
   // Register todo commands
   registerTodoCommands(context, todoManager, todoTreeView, todoTreeProvider);
   
+  // Register settings commands
+  registerSettingsCommands(context);
+  
   // Create and register the todo status bar
   const todoStatusBar = new TodoStatusBar(todoManager);
   context.subscriptions.push({
@@ -56,6 +60,15 @@ export function activate(context: vscode.ExtensionContext) {
   
   // Make todoManager available to the provider
   (provider as any).todoManager = todoManager;
+  
+  // Check for existing Claude session on startup
+  setTimeout(async () => {
+    const sessionId = await provider.detectSessionId();
+    if (sessionId && todoManager) {
+      await todoManager.startSession(sessionId);
+      console.log(`Started todo tracking for existing session: ${sessionId}`);
+    }
+  }, 2000); // Wait 2 seconds for terminal to initialize
   
   context.subscriptions.push(
     todoTreeView,

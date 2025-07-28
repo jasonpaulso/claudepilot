@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { TodoManager, TodoChangeEvent } from './todoManager';
 import { SessionHistoryManager } from './sessionHistory';
 import { TodoItem } from './todoParser';
+import { SettingsManager } from '../utils/settingsManager';
 
 /**
  * Tree item types for the todo view
@@ -131,13 +132,16 @@ export class TodoTreeProvider implements vscode.TreeDataProvider<TodoTreeItem> {
     readonly onDidChangeTreeData: vscode.Event<TodoTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
     
     private todoManager: TodoManager;
+    private settingsManager: SettingsManager;
     private isLoading = false;
     private expandedStates = new Map<string, boolean>();
     private filterText: string | undefined;
     
     constructor(todoManager: TodoManager) {
         this.todoManager = todoManager;
+        this.settingsManager = new SettingsManager();
         this.setupEventListeners();
+        this.initializeExpansionStates();
     }
     
     /**
@@ -208,7 +212,28 @@ export class TodoTreeProvider implements vscode.TreeDataProvider<TodoTreeItem> {
     }
     
     /**
+     * Initialize expansion states based on settings
+     */
+    private initializeExpansionStates(): void {
+        const settings = this.settingsManager.getTodoSettings();
+        if (settings.expandByDefault) {
+            // Set default expanded state for status groups
+            this.expandedStates.set('pending', true);
+            this.expandedStates.set('in_progress', true);
+            this.expandedStates.set('completed', true);
+        }
+    }
+    
+    /**
      * Setup event listeners for todo manager
+     * 
+     * This method establishes automatic updates by listening to:
+     * 1. TodoManager's 'todoChanged' events - triggered when todo files are created/updated/deleted
+     * 2. Error events from the TodoManager
+     * 3. Settings changes that might affect display
+     * 
+     * The TodoManager watches the ~/.claude/todos/ directory for changes to session todo files
+     * and emits events when Claude Code updates them, ensuring the UI stays in sync automatically.
      */
     private setupEventListeners(): void {
         // Listen for todo changes
@@ -221,6 +246,12 @@ export class TodoTreeProvider implements vscode.TreeDataProvider<TodoTreeItem> {
         this.todoManager.on('error', (error: Error) => {
             console.error('TodoTreeProvider: TodoManager error:', error);
             vscode.window.showErrorMessage(`Todo error: ${error.message}`);
+        });
+        
+        // Listen for settings changes
+        this.settingsManager.onSettingsChanged(() => {
+            this.initializeExpansionStates();
+            this.refresh();
         });
     }
     

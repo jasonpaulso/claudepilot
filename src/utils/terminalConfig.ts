@@ -59,17 +59,33 @@ export const getTerminalThemeScript = (): string => `
     };
 `;
 
-export const getTerminalConfig = (): string => `
-    {
-        cursorBlink: true,
-        cursorStyle: 'block',
-        // fontSize: 14,
-        // fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
+export const getTerminalConfig = (settings?: {
+    fontSize?: number;
+    fontFamily?: string;
+    cursorStyle?: string;
+    cursorBlink?: boolean;
+    scrollback?: number;
+}): string => {
+    const config = {
+        cursorBlink: settings?.cursorBlink ?? true,
+        cursorStyle: settings?.cursorStyle ?? 'block',
         lineHeight: 1.0,
         letterSpacing: 0,
         allowTransparency: true,
-        theme: terminalTheme,
-        scrollback: 1000,
+        theme: 'terminalTheme',
+        scrollback: settings?.scrollback ?? 1000,
         scrollOnUserInput: true
+    };
+    
+    // Add fontSize if provided
+    if (settings?.fontSize) {
+        (config as any).fontSize = settings.fontSize;
     }
-`;
+    
+    // Add fontFamily if provided
+    if (settings?.fontFamily) {
+        (config as any).fontFamily = settings.fontFamily;
+    }
+    
+    return JSON.stringify(config, null, 4).replace('"terminalTheme"', 'terminalTheme');
+};

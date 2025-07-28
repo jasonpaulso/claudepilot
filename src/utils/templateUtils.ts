@@ -14,6 +14,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { WebviewResources, WebviewTemplate } from "./webviewTemplate";
+import { SettingsManager } from "./settingsManager";
 
 export class TemplateUtils {
   public static getHtmlTemplate(
@@ -100,13 +101,18 @@ export class TemplateUtils {
       ),
     };
 
-    // Use the new template generator with workspace path
+    // Get terminal settings
+    const settingsManager = new SettingsManager();
+    const terminalSettings = settingsManager.getTerminalSettings();
+    
+    // Use the new template generator with workspace path and settings
     return WebviewTemplate.generateHtml(
       resources,
       version,
       timestamp,
       workspacePath,
-      sessionId
+      sessionId,
+      terminalSettings
     );
   }
 }
