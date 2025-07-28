@@ -244,6 +244,18 @@
         "title": "Generate Commit Message with Claude",
         "category": "Claude Pilot",
         "icon": "$(robot)"
+      },
+      {
+        "command": "claudepilot.showHookStatus",
+        "title": "Show Hook Status",
+        "category": "Claude Pilot",
+        "icon": "$(info)"
+      },
+      {
+        "command": "claudepilot.reinstallHooks",
+        "title": "Reinstall Claude Hooks",
+        "category": "Claude Pilot",
+        "icon": "$(sync)"
       }
     ],
     "submenus": [

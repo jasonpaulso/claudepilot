@@ -1,14 +1,14 @@
 /**
- * Todo Manager for Claude Pilot
+ * Todo Manager for Claude Pilot with Hook Server Integration
  * 
  * Orchestrates todo file watching and parsing, providing a unified interface
- * for managing Claude's todo lists.
+ * for managing Claude's todo lists with real-time updates from hooks.
  */
 
 import { EventEmitter } from 'events';
 import { TodoWatcher, TodoFileEvent } from './todoWatcher';
 import { TodoParser, TodoList } from './todoParser';
-import { TodoNotificationMonitor, TodoUpdate } from '../services/todoNotificationMonitor';
+import { HookServer } from '../services/hookServer';
 
 export interface TodoChangeEvent {
     type: 'created' | 'updated' | 'deleted';
@@ -28,18 +28,31 @@ export interface TodoStats {
     fileCount: number;
 }
 
+export interface TodoUpdate {
+    type: 'todo_update';
+    sessionId: string;
+    timestamp: string;
+    todos: Array<{
+        id: string;
+        content: string;
+        status: 'pending' | 'in_progress' | 'completed';
+        priority: 'high' | 'medium' | 'low';
+    }>;
+    toolResponse: any;
+}
+
 export class TodoManager extends EventEmitter {
     private todoWatcher: TodoWatcher;
-    private notificationMonitor: TodoNotificationMonitor;
+    private hookServer?: HookServer;
     private currentSessionId?: string;
     private todoCache = new Map<string, TodoList>();
     private parseDebounceTimers = new Map<string, NodeJS.Timeout>();
     private readonly DEBOUNCE_DELAY = 300; // ms
 
-    constructor() {
+    constructor(hookServer?: HookServer) {
         super();
         this.todoWatcher = new TodoWatcher();
-        this.notificationMonitor = new TodoNotificationMonitor();
+        this.hookServer = hookServer;
         this.setupEventListeners();
     }
 
@@ -51,9 +64,6 @@ export class TodoManager extends EventEmitter {
         
         this.currentSessionId = sessionId;
         this.todoCache.clear();
-        
-        // Start notification monitoring
-        this.notificationMonitor.start();
         
         // Start watching for file changes
         this.todoWatcher.startWatching(sessionId);
@@ -70,7 +80,6 @@ export class TodoManager extends EventEmitter {
         
         this.currentSessionId = undefined;
         this.todoWatcher.stopWatching();
-        this.notificationMonitor.stop();
         this.todoCache.clear();
         
         // Clear any pending debounce timers
@@ -105,12 +114,11 @@ export class TodoManager extends EventEmitter {
     public dispose(): void {
         this.stopSession();
         this.todoWatcher.dispose();
-        this.notificationMonitor.stop();
         this.removeAllListeners();
     }
 
     /**
-     * Setup event listeners for the todo watcher and notification monitor
+     * Setup event listeners for the todo watcher and hook server
      */
     private setupEventListeners(): void {
         // File watcher events
@@ -123,10 +131,16 @@ export class TodoManager extends EventEmitter {
             this.emit('error', error);
         });
 
-        // Hook notification events
-        this.notificationMonitor.on('todoUpdate', (update: TodoUpdate) => {
-            this.handleTodoNotification(update);
-        });
+        // Hook server events (if available)
+        if (this.hookServer) {
+            this.hookServer.on('todoUpdate', (update: TodoUpdate) => {
+                this.handleTodoNotification(update);
+            });
+
+            this.hookServer.on('sessionUpdate', (sessionInfo: any) => {
+                this.handleSessionUpdate(sessionInfo);
+            });
+        }
     }
 
     /**
@@ -149,20 +163,32 @@ export class TodoManager extends EventEmitter {
      * Handle todo notifications from hooks
      */
     private handleTodoNotification(update: TodoUpdate): void {
-        console.log(`TodoManager: Received todo notification for session ${update.session_id}`);
+        console.log(`TodoManager: Received todo notification for session ${update.sessionId}`);
         
         // Emit a change event to trigger UI refresh
         const event: TodoChangeEvent = {
             type: 'updated',
-            sessionId: update.session_id,
+            sessionId: update.sessionId,
             // The actual todo data will be loaded from files by the watcher
         };
         
         this.emit('todoChanged', event);
         
         // Also trigger a re-scan of files to ensure we have the latest data
-        if (this.currentSessionId === update.session_id) {
+        if (this.currentSessionId === update.sessionId) {
             this.loadExistingTodos();
+        }
+    }
+
+    /**
+     * Handle session updates from hooks
+     */
+    private handleSessionUpdate(sessionInfo: any): void {
+        console.log(`TodoManager: Received session update for ${sessionInfo.sessionId}`);
+        
+        // If this is a new session, switch to it
+        if (sessionInfo.sessionId && sessionInfo.sessionId !== this.currentSessionId) {
+            this.startSession(sessionInfo.sessionId);
         }
     }
 
@@ -297,118 +323,21 @@ export class TodoManager extends EventEmitter {
                         break;
                 }
                 
-                // Count by priority (only for non-completed todos)
-                if (todo.status !== 'completed') {
-                    switch (todo.priority) {
-                        case 'high':
-                            stats.highPriority++;
-                            break;
-                        case 'medium':
-                            stats.mediumPriority++;
-                            break;
-                        case 'low':
-                            stats.lowPriority++;
-                            break;
-                    }
+                // Count by priority
+                switch (todo.priority) {
+                    case 'high':
+                        stats.highPriority++;
+                        break;
+                    case 'medium':
+                        stats.mediumPriority++;
+                        break;
+                    case 'low':
+                        stats.lowPriority++;
+                        break;
                 }
             }
         }
-
+        
         return stats;
-    }
-
-    /**
-     * Refresh todos by re-parsing all files
-     */
-    public async refresh(): Promise<void> {
-        console.log('TodoManager: Refreshing todos');
-        
-        // Clear cache
-        this.todoCache.clear();
-        
-        // Reload all todos
-        await this.loadExistingTodos();
-    }
-    
-    /**
-     * Get current session ID
-     */
-    public getCurrentSessionId(): string | undefined {
-        return this.currentSessionId;
-    }
-    
-    /**
-     * Export todos as Markdown
-     */
-    public exportAsMarkdown(): string {
-        const todos = this.getCurrentTodos();
-        const lines: string[] = ['# Claude Pilot Todos', ''];
-        
-        for (const todoList of todos) {
-            lines.push(`## Session: ${todoList.sessionId}`, '');
-            
-            // Group by status
-            const byStatus = {
-                pending: [] as typeof todoList.todos,
-                in_progress: [] as typeof todoList.todos,
-                completed: [] as typeof todoList.todos
-            };
-            
-            for (const todo of todoList.todos) {
-                byStatus[todo.status].push(todo);
-            }
-            
-            // Pending
-            if (byStatus.pending.length > 0) {
-                lines.push('### Pending', '');
-                for (const todo of byStatus.pending) {
-                    const priority = todo.priority === 'high' ? ' ⚠️' : '';
-                    lines.push(`- [ ] ${todo.content}${priority}`);
-                }
-                lines.push('');
-            }
-            
-            // In Progress
-            if (byStatus.in_progress.length > 0) {
-                lines.push('### In Progress', '');
-                for (const todo of byStatus.in_progress) {
-                    const priority = todo.priority === 'high' ? ' ⚠️' : '';
-                    lines.push(`- [~] ${todo.content}${priority}`);
-                }
-                lines.push('');
-            }
-            
-            // Completed
-            if (byStatus.completed.length > 0) {
-                lines.push('### Completed', '');
-                for (const todo of byStatus.completed) {
-                    lines.push(`- [x] ${todo.content}`);
-                }
-                lines.push('');
-            }
-        }
-        
-        return lines.join('\n');
-    }
-    
-    /**
-     * Export todos as plain text
-     */
-    public exportAsPlainText(): string {
-        const todos = this.getCurrentTodos();
-        const lines: string[] = ['Claude Pilot Todos', '==================', ''];
-        
-        for (const todoList of todos) {
-            lines.push(`Session: ${todoList.sessionId}`, '-'.repeat(40), '');
-            
-            for (const todo of todoList.todos) {
-                const status = todo.status.replace('_', ' ').toUpperCase();
-                const priority = todo.priority.toUpperCase();
-                lines.push(`[${status}] [${priority}] ${todo.content}`);
-            }
-            lines.push('');
-        }
-        
-        return lines.join('\n');
     }
 }

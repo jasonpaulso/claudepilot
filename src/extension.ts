@@ -1,18 +1,32 @@
 import * as vscode from "vscode";
 import { ClaudeCodeProvider } from "./claudeCodeProvider";
-import { TodoManager, TodoTreeProvider, registerTodoCommands, TodoStatusBar } from "./todos";
+import { TodoTreeProvider, registerTodoCommands, TodoStatusBar } from "./todos";
+import { TodoManager } from "./todos/todoManagerWithHooks";
 import { registerSettingsCommands } from "./commands/settingsCommands";
 import { registerScmCommands } from "./commands/scmCommands";
 import { OutputChannelManager } from "./utils/outputChannel";
+import { ClaudePilotHooks, registerHookCommands } from "./services/claudePilotHooks";
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   console.log("Claude Pilot extension is now active!");
 
   const provider = new ClaudeCodeProvider(context.extensionUri, context);
   
-  // Initialize TodoManager and TreeProvider
-  const todoManager = new TodoManager();
+  // Initialize hooks system
+  const hooks = new ClaudePilotHooks(context);
+  try {
+    await hooks.initialize();
+  } catch (error) {
+    console.error("Failed to initialize hooks:", error);
+    vscode.window.showWarningMessage("Claude Pilot hooks failed to initialize. Some features may not work correctly.");
+  }
+  
+  // Initialize TodoManager with hook server and TreeProvider
+  const todoManager = new TodoManager(hooks.getHookServer());
   const todoTreeProvider = new TodoTreeProvider(todoManager);
+  
+  // Connect todo manager to hooks
+  hooks.setTodoManager(todoManager);
   
   // Register the todo tree view
   const todoTreeView = vscode.window.createTreeView('claudePilotTodos', {
@@ -37,6 +51,9 @@ export function activate(context: vscode.ExtensionContext) {
   
   // Register SCM commands
   registerScmCommands(context, provider);
+  
+  // Register hook commands
+  registerHookCommands(context, hooks);
   
   // Create and register the todo status bar
   const todoStatusBar = new TodoStatusBar(todoManager);
@@ -78,7 +95,12 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     todoTreeView,
     todoManager,
-    todoTreeProvider
+    todoTreeProvider,
+    {
+      dispose: async () => {
+        await hooks.dispose();
+      }
+    }
   );
 
   // Register the WebviewView provider
