@@ -2827,8 +2827,44 @@
       "status": "completed",
       "lastModified": "2025-07-28T13:08:40.721Z",
       "lastProcessed": "2025-07-28T13:08:42.726Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/7539b398-895a-4a2e-9fc1-e538aaaee1eb.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/7539b398-895a-4a2e-9fc1-e538aaaee1eb.jsonl",
+      "totalLines": 116,
+      "processedLines": 62,
+      "lastProcessedLine": 115,
+      "status": "completed",
+      "lastModified": "2025-07-28T13:17:55.723Z",
+      "lastProcessed": "2025-07-28T13:19:27.531Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/dd73e3f8-d9db-4599-a184-293a726ca7d7.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/dd73e3f8-d9db-4599-a184-293a726ca7d7.jsonl",
+      "totalLines": 3,
+      "processedLines": 1,
+      "lastProcessedLine": 0,
+      "status": "completed",
+      "lastModified": "2025-07-28T13:18:57.076Z",
+      "lastProcessed": "2025-07-28T13:18:57.267Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/5cea14e2-9eac-4683-884f-c457f47f5372.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/5cea14e2-9eac-4683-884f-c457f47f5372.jsonl",
+      "totalLines": 3,
+      "processedLines": 1,
+      "lastProcessedLine": 0,
+      "status": "completed",
+      "lastModified": "2025-07-28T13:18:55.480Z",
+      "lastProcessed": "2025-07-28T13:18:55.660Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/37814d11-5ab7-4392-9c3e-2cac700a6132.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/37814d11-5ab7-4392-9c3e-2cac700a6132.jsonl",
+      "totalLines": 2,
+      "processedLines": 0,
+      "lastProcessedLine": -1,
+      "status": "completed",
+      "lastModified": "2025-07-28T13:19:30.167Z",
+      "lastProcessed": "2025-07-28T13:19:30.205Z"
     }
   },
   "startedAt": "2025-07-27T15:06:44.309Z",
-  "lastUpdated": "2025-07-28T13:10:12.094Z"
+  "lastUpdated": "2025-07-28T13:19:34.724Z"
 }

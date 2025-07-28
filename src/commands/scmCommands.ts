@@ -7,6 +7,9 @@ import * as path from "path";
 
 const execAsync = promisify(exec);
 
+// Track if a commit message generation is in progress
+let isGeneratingCommitMessage = false;
+
 export async function registerScmCommands(
   context: vscode.ExtensionContext,
   provider: ClaudeCodeProvider
@@ -19,6 +22,13 @@ export async function registerScmCommands(
 }
 
 async function generateCommitMessage(provider: ClaudeCodeProvider) {
+  // Prevent multiple instances
+  if (isGeneratingCommitMessage) {
+    vscode.window.showWarningMessage("Commit message generation already in progress");
+    return;
+  }
+  
+  isGeneratingCommitMessage = true;
   try {
     // Check if we have a workspace
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -82,12 +92,19 @@ ${stagedDiff}
         
         // Use spawn instead of exec to avoid shell interpretation issues
         const result = await new Promise<string>((resolve, reject) => {
-          const claudeProcess = spawn("claude", ["-p", prompt], {
+          // Use -p flag for non-interactive output
+          const claudeProcess = spawn("claude", ["-p"], {
             cwd: workspaceFolder.uri.fsPath
           });
           
           let stdout = "";
           let stderr = "";
+          
+          // Set a timeout of 30 seconds
+          const timeout = setTimeout(() => {
+            claudeProcess.kill();
+            reject(new Error("Claude process timed out after 30 seconds"));
+          }, 30000);
           
           claudeProcess.stdout.on("data", (data) => {
             stdout += data.toString();
@@ -98,6 +115,7 @@ ${stagedDiff}
           });
           
           claudeProcess.on("close", (code) => {
+            clearTimeout(timeout);
             if (code === 0) {
               resolve(stdout.trim());
             } else {
@@ -106,8 +124,13 @@ ${stagedDiff}
           });
           
           claudeProcess.on("error", (err) => {
+            clearTimeout(timeout);
             reject(err);
           });
+          
+          // Write the prompt to stdin
+          claudeProcess.stdin.write(prompt);
+          claudeProcess.stdin.end();
         });
         
         // Clean up prompt file
@@ -154,5 +177,8 @@ ${stagedDiff}
   } catch (error) {
     console.error("Error in generateCommitMessage:", error);
     vscode.window.showErrorMessage(`Error: ${error}`);
+  } finally {
+    // Always reset the flag
+    isGeneratingCommitMessage = false;
   }
 }
