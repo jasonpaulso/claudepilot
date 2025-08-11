@@ -2930,22 +2930,121 @@
     "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/74ca8435-c817-4993-8514-0fdc994bc273.jsonl": {
       "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/74ca8435-c817-4993-8514-0fdc994bc273.jsonl",
       "totalLines": 671,
-      "processedLines": 250,
-      "lastProcessedLine": 487,
-      "status": "processing",
+      "processedLines": 340,
+      "lastProcessedLine": 670,
+      "status": "completed",
       "lastModified": "2025-07-28T15:40:12.874Z",
-      "lastProcessed": "2025-07-28T15:45:32.617Z"
+      "lastProcessed": "2025-07-28T17:50:55.255Z"
     },
     "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/9e383e0f-42ca-43aa-af5a-d412f5fc35f9.jsonl": {
       "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/9e383e0f-42ca-43aa-af5a-d412f5fc35f9.jsonl",
+      "totalLines": 552,
+      "processedLines": 11,
+      "lastProcessedLine": 551,
+      "status": "completed",
+      "lastModified": "2025-07-28T16:34:58.343Z",
+      "lastProcessed": "2025-07-28T17:50:58.020Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Models-ComfyUI-0-3-46/97810a53-3c2d-4262-9d29-f72dbb0db0ff.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Models-ComfyUI-0-3-46/97810a53-3c2d-4262-9d29-f72dbb0db0ff.jsonl",
+      "totalLines": 84,
+      "processedLines": 7,
+      "lastProcessedLine": 83,
+      "status": "completed",
+      "lastModified": "2025-07-28T16:17:10.892Z",
+      "lastProcessed": "2025-07-28T17:50:56.265Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/24fc31b1-bc31-4048-b975-09cdb418ae80.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/24fc31b1-bc31-4048-b975-09cdb418ae80.jsonl",
+      "totalLines": 2,
+      "processedLines": 0,
+      "lastProcessedLine": -1,
+      "status": "completed",
+      "lastModified": "2025-07-28T15:45:50.380Z",
+      "lastProcessed": "2025-07-28T17:50:55.435Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/1746ff2e-3c9d-4ee4-9d60-4e3b9d6e9b6e.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/1746ff2e-3c9d-4ee4-9d60-4e3b9d6e9b6e.jsonl",
+      "totalLines": 141,
+      "processedLines": 16,
+      "lastProcessedLine": 140,
+      "status": "completed",
+      "lastModified": "2025-07-28T17:36:35.415Z",
+      "lastProcessed": "2025-07-28T17:50:56.932Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/340f4944-86b4-4fd5-a8b8-fb340f1aa7b5.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/340f4944-86b4-4fd5-a8b8-fb340f1aa7b5.jsonl",
       "totalLines": 1,
       "processedLines": 1,
       "lastProcessedLine": 0,
       "status": "completed",
-      "lastModified": "2025-07-28T15:45:21.129Z",
-      "lastProcessed": "2025-07-28T15:45:21.850Z"
+      "lastModified": "2025-07-28T17:29:58.735Z",
+      "lastProcessed": "2025-07-28T17:50:55.457Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/12504bbc-395c-403c-bece-e6a2c5b81483.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/12504bbc-395c-403c-bece-e6a2c5b81483.jsonl",
+      "totalLines": 115,
+      "processedLines": 6,
+      "lastProcessedLine": 114,
+      "status": "completed",
+      "lastModified": "2025-07-28T16:47:32.770Z",
+      "lastProcessed": "2025-07-28T17:50:56.374Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/60cf6b1b-0d3b-4970-8cc9-0e40f6b0110e.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/60cf6b1b-0d3b-4970-8cc9-0e40f6b0110e.jsonl",
+      "totalLines": 1,
+      "processedLines": 1,
+      "lastProcessedLine": 0,
+      "status": "completed",
+      "lastModified": "2025-07-28T17:50:49.148Z",
+      "lastProcessed": "2025-07-28T17:50:55.440Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/d59519c6-e66c-4e9c-b042-405593fc5c68.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/d59519c6-e66c-4e9c-b042-405593fc5c68.jsonl",
+      "totalLines": 1,
+      "processedLines": 1,
+      "lastProcessedLine": 0,
+      "status": "completed",
+      "lastModified": "2025-07-28T16:48:31.517Z",
+      "lastProcessed": "2025-07-28T17:50:55.446Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/18bea29a-aaf5-4bab-8387-d51db4f5ff14.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/18bea29a-aaf5-4bab-8387-d51db4f5ff14.jsonl",
+      "totalLines": 2,
+      "processedLines": 0,
+      "lastProcessedLine": -1,
+      "status": "completed",
+      "lastModified": "2025-07-28T17:01:06.389Z",
+      "lastProcessed": "2025-07-28T17:50:55.439Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/48529e43-2f45-490a-9d72-7137136753d7.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/48529e43-2f45-490a-9d72-7137136753d7.jsonl",
+      "totalLines": 3,
+      "processedLines": 1,
+      "lastProcessedLine": 0,
+      "status": "completed",
+      "lastModified": "2025-07-28T17:01:21.078Z",
+      "lastProcessed": "2025-07-28T17:50:55.505Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/a045d788-0173-4393-a8b7-3201d76dc6b8.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/a045d788-0173-4393-a8b7-3201d76dc6b8.jsonl",
+      "totalLines": 3,
+      "processedLines": 1,
+      "lastProcessedLine": 0,
+      "status": "completed",
+      "lastModified": "2025-07-28T16:51:01.417Z",
+      "lastProcessed": "2025-07-28T17:50:55.490Z"
+    },
+    "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/dbd667f3-cb16-4008-8857-36d0a9be7464.jsonl": {
+      "filePath": "/Users/jasonschulz/.claude/projects/-Volumes-Developer-Tools-claudepilot/dbd667f3-cb16-4008-8857-36d0a9be7464.jsonl",
+      "totalLines": 2,
+      "processedLines": 0,
+      "lastProcessedLine": -1,
+      "status": "completed",
+      "lastModified": "2025-07-28T16:49:21.224Z",
+      "lastProcessed": "2025-07-28T17:50:55.437Z"
     }
   },
   "startedAt": "2025-07-27T15:06:44.309Z",
-  "lastUpdated": "2025-07-28T15:45:32.642Z"
+  "lastUpdated": "2025-07-28T19:38:31.661Z"
 }
